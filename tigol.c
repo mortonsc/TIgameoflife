@@ -68,19 +68,18 @@ __at 0x86EC unsigned char neighbor_matrix_strip[STRIP_HEIGHT][STRIP_WIDTH];
 
 /*
  * Fills neighbor_matrix with the number of live neighbors of each pixel in the
- * BLOCK_HEIGHT x BLOCK_WIDTH rectangle with upper-left corner (y_start, x_start)
+ * BLOCK_HEIGHT x BLOCK_WIDTH rectangle with upper-left corner (origin_y, origin_x)
  *
- * Part of another (better?) implementation of take_step.
  * If we had unlimited memory, we would make a new matrix of how many
  * live neighbors each cell has. We don't have enough memory for that,
  * but we can do it in steps.
  * This way requires both appBackUpScreen and saveSScreen
  */
-void fill_neighbor_matrix(int y_start, int x_start)
+void fill_neighbor_matrix(int origin_y, int origin_x)
 {
     unsigned char *byte
-        = plotSScreen + y_start*SCREEN_WIDTH_BYTES + x_start / 8;
-    int bit = x_start % 8;
+        = plotSScreen + origin_y*SCREEN_WIDTH_BYTES + origin_x / 8;
+    int bit = origin_x % 8;
 
     /*
      *  these variables serve as markers
@@ -122,14 +121,16 @@ void fill_neighbor_matrix(int y_start, int x_start)
 /*
  * Based on the values in neighbor_matrix, set the pixels in appBackUpScreen
  * to their new values
+ * The only pixels set are those whose correspond elements in neighbor_matrix
+ * are within the rectangle bounded by x_start, x_end, y_start, y_end
  * This assumes appBackUpScreen contains their current values
- * At some point this will need to be able to exclude some rows/columns
  */
-void load_neighbor_matrix(int y_start, int x_start)
+void load_neighbor_matrix(int origin_y, int origin_x,
+        int y_start, int y_end, int x_start, int x_end)
 {
     unsigned char *byte
-        = appBackUpScreen + y_start*SCREEN_WIDTH_BYTES + x_start / 8;
-    int bit = x_start % 8;
+        = appBackUpScreen + origin_y*SCREEN_WIDTH_BYTES + origin_x / 8;
+    int bit = origin_x % 8;
 
     unsigned char *start_row = byte;
     int start_bit = bit;
@@ -140,8 +141,8 @@ void load_neighbor_matrix(int y_start, int x_start)
 
     int num_neighbors;
 
-    for (row = 0; row < BLOCK_HEIGHT; row++) {
-        for (col = 0; col < BLOCK_WIDTH; col++) {
+    for (row = y_start; row < y_end; row++) {
+        for (col = x_start; col < x_end; col++) {
             num_neighbors = neighbor_matrix[row][col];
             if (num_neighbors < 2 || num_neighbors > 3)
                 set_bit(byte, bit, false);
@@ -163,12 +164,12 @@ void load_neighbor_matrix(int y_start, int x_start)
 /*
  * Fills neighbor_matrix_strip with the number of neighbors of each cell
  * along the middle strip
- * There is no x_start parameter because it always starts from x = 0
+ * There is no origin_x parameter because it always starts from x = 0
  */
-void fill_neighbor_matrix_strip(int y_start)
+void fill_neighbor_matrix_strip(int origin_y)
 {
     unsigned char *byte
-        = plotSScreen + y_start*SCREEN_WIDTH_BYTES;
+        = plotSScreen + origin_y*SCREEN_WIDTH_BYTES;
     int bit = 0;
 
     /*
@@ -212,10 +213,10 @@ void fill_neighbor_matrix_strip(int y_start)
  * to their new values along the middle strip
  * This assumes appBackUpScreen contains their current values
  */
-void load_neighbor_matrix_strip(int y_start)
+void load_neighbor_matrix_strip(int origin_y)
 {
     unsigned char *byte
-        = appBackUpScreen + y_start*SCREEN_WIDTH_BYTES;
+        = appBackUpScreen + origin_y*SCREEN_WIDTH_BYTES;
     int bit = 0;
 
     unsigned char *start_row = byte;
@@ -246,6 +247,65 @@ void load_neighbor_matrix_strip(int y_start)
     }
 }
 
+/*
+ * Advances the game by one step
+ */
+void take_step()
+{
+    /* which block we're on */
+    int block_row = 0;
+    int block = 0;
+
+    /* top-left corner of the current block */
+    int origin_y = 0;
+    int origin_x = 0;
+
+    /* what rows of the block to actually print */
+    int y_start = 0;
+    int y_end = BLOCK_HEIGHT - 2;
+
+    /* iteration vars */
+    int i;
+    int j;
+
+    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
+    memset(saveSScreen, 0, BUFFER_SIZE);
+
+    /* this loop executes twice: once for each row of blocks */
+    while (block_row < 2) {
+        /* first three blocks */
+        while (block < 3) {
+            /* update this part of the screen */
+            fill_neighbor_matrix(origin_y, origin_x);
+            load_neighbor_matrix(origin_y, origin_x,
+                    y_start, y_end, origin_x, origin_x + BLOCK_WIDTH - 2);
+
+            /* copy over the values on the rightmost column */
+            for (i = 0; i < BLOCK_HEIGHT; i++)
+                neighbor_matrix[i][0] = neighbor_matrix[i][BLOCK_WIDTH-1];
+
+            /* delete the rest */
+            for (i = 0; i < BLOCK_HEIGHT; i++)
+                for (j = 1; j < BLOCK_WIDTH; j++)
+                    neighbor_matrix[i][j] = 0;
+
+            /* advance to the next block */
+            origin_x += BLOCK_WIDTH-1;
+            block++;
+        }
+        /* final block */
+        fill_neighbor_matrix(origin_y, origin_x);
+        load_neighbor_matrix(origin_y, origin_x,
+                y_start, y_end, origin_x, origin_x + BLOCK_WIDTH - 1);
+        memset(saveSScreen, 0, BUFFER_SIZE);
+
+        /* move to the second row of blocks */
+        origin_y = SCREEN_HEIGHT - BLOCK_HEIGHT - 1;
+        y_start = origin_y + 1;
+        origin_x = 0;
+        block_row++;
+    }
+}
 
 int main()
 {
