@@ -1,8 +1,13 @@
+inc/ti83plus.inc
 *.rel
-*.lk
+*.swp
+*.asm
+!inc/fastcopy.asm
 *.lst
 *.sym
+*.lk
+*.map
+*.noi
 *.8xp
 *.bin
 *.ihx
-inc/ti83plus.inc
