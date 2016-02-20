@@ -151,7 +151,8 @@ __at 0x86EC unsigned char neighbor_matrix[BLOCK_HEIGHT][BLOCK_WIDTH];
  */
 void fill_neighbor_matrix(int y_start, int x_start)
 {
-    unsigned char *byte = plotSScreen + y_start*SCREEN_WIDTH_BYTES + x_start / 8;
+    unsigned char *byte
+        = plotSScreen + y_start*SCREEN_WIDTH_BYTES + x_start / 8;
     int bit = x_start % 8;
 
     /*
@@ -192,11 +193,41 @@ void fill_neighbor_matrix(int y_start, int x_start)
 /*
  * Based on the values in neighbor_matrix, set the pixels in appBackUpScreen
  * to their new values
- * At some point this will need to be albe to exclude some rows/columns
+ * This assumes appBackUpScreen contains their current values
+ * At some point this will need to be able to exclude some rows/columns
  */
 void load_neighbor_matrix(int y_start, int x_start)
 {
+    unsigned char *byte
+        = appBackUpScreen + y_start*SCREEN_WIDTH_BYTES + x_start / 8;
+    int bit = x_start % 8;
 
+    unsigned char *start_row = byte;
+    int start_bit = bit;
+
+    /* iteration vars */
+    int row;
+    int col;
+
+    int num_neighbors;
+
+    for (row = 0; row < BLOCK_HEIGHT; row++) {
+        for (col = 0; col < BLOCK_WIDTH; col++) {
+            num_neighbors = neighbor_matrix[row][col];
+            if (num_neighbors < 2 || num_neighbors > 3)
+                set_bit(byte, bit, false);
+            else if (num_neighbors == 3)
+                set_bit(byte, bit, true);
+
+            if (bit == 8) {
+                bit = 0;
+                byte++;
+            }
+        }
+        start_row = start_row + SCREEN_WIDTH_BYTES;
+        byte = start_row;
+        bit = start_bit;
+    }
 }
 
 int main()
