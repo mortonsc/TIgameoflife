@@ -129,9 +129,9 @@ void fill_neighbor_matrix(int origin_y, int origin_x)
 void load_neighbor_matrix(int origin_y, int origin_x,
         int y_start, int y_end, int x_start, int x_end)
 {
-    unsigned char *byte
-        = appBackUpScreen + origin_y*SCREEN_WIDTH_BYTES + origin_x / 8;
-    int bit = origin_x % 8;
+    unsigned char *byte = appBackUpScreen
+        + (origin_y+y_start)*SCREEN_WIDTH_BYTES + (origin_x+x_start) / 8;
+    int bit = (origin_x+x_start) % 8;
 
     unsigned char *start_row = byte;
     int start_bit = bit;
@@ -173,9 +173,6 @@ void fill_neighbor_matrix_strip(int origin_y)
         = plotSScreen + origin_y*SCREEN_WIDTH_BYTES;
     int bit = 0;
 
-    /*
-     *  these variables serve as markers
-     */
     unsigned char *start_row = byte;
 
     /* iteration vars */
@@ -218,7 +215,7 @@ void fill_neighbor_matrix_strip(int origin_y)
 void load_neighbor_matrix_strip(int origin_y)
 {
     unsigned char *byte
-        = appBackUpScreen + origin_y*SCREEN_WIDTH_BYTES;
+        = appBackUpScreen + (origin_y+1) * SCREEN_WIDTH_BYTES;
     int bit = 0;
 
     unsigned char *start_row = byte;
@@ -282,7 +279,7 @@ void take_step()
             /* update this part of the screen */
             fill_neighbor_matrix(origin_y, origin_x);
             load_neighbor_matrix(origin_y, origin_x,
-                    y_start, y_end, origin_x, origin_x + BLOCK_WIDTH - 1);
+                    y_start, y_end, 0, BLOCK_WIDTH - 1);
 
             /* copy over the values on the rightmost column */
             for (i = 0; i < BLOCK_HEIGHT; i++)
@@ -300,7 +297,7 @@ void take_step()
         /* final block */
         fill_neighbor_matrix(origin_y, origin_x);
         load_neighbor_matrix(origin_y, origin_x,
-                y_start, y_end, origin_x, origin_x + BLOCK_WIDTH);
+                y_start, y_end, 0, BLOCK_WIDTH);
         memset(saveSScreen, 0, BUFFER_SIZE);
 
         /* move to the second row of blocks */
@@ -339,13 +336,8 @@ int main()
 
     GetKey();
 
-    for (i = 0; i < 20; i++) {
-        /* take_step(); */
-        fill_neighbor_matrix_strip(STRIP_TOP);
-        load_neighbor_matrix_strip(STRIP_TOP);
-        memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
-        memset(saveSScreen, 0, BUFFER_SIZE);
-        FastCopy();
+    for (i = 0; i < 30; i++) {
+        take_step();
     }
 
     GetKey();
