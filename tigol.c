@@ -189,11 +189,11 @@ void fill_neighbor_matrix_strip(int y_start)
                 for (; i <= row+1 && i < STRIP_HEIGHT; i++) {
                     j = (col > 0) ? col-1 : col;
                     for (; j <= col+1 && j < STRIP_WIDTH; j++) {
-                        neighbor_matrix[i][j]++;
+                        neighbor_matrix_strip[i][j]++;
                     }
                 }
                 /* the above loop counts a cell as its own neighbor */
-                neighbor_matrix[row][col]--;
+                neighbor_matrix_strip[row][col]--;
             }
             bit++;
             if (bit == 8) {
@@ -212,7 +212,7 @@ void fill_neighbor_matrix_strip(int y_start)
  * to their new values along the middle strip
  * This assumes appBackUpScreen contains their current values
  */
-void load_neighbor_matrix(int y_start)
+void load_neighbor_matrix_strip(int y_start)
 {
     unsigned char *byte
         = appBackUpScreen + y_start*SCREEN_WIDTH_BYTES;
@@ -228,7 +228,7 @@ void load_neighbor_matrix(int y_start)
 
     for (row = 0; row < STRIP_HEIGHT; row++) {
         for (col = 0; col < STRIP_WIDTH; col++) {
-            num_neighbors = neighbor_matrix[row][col];
+            num_neighbors = neighbor_matrix_strip[row][col];
             if (num_neighbors < 2 || num_neighbors > 3)
                 set_bit(byte, bit, false);
             else if (num_neighbors == 3)
@@ -263,9 +263,9 @@ int main()
 
     GetKey();
 
-    fill_neighbor_matrix(18, 0);
+    fill_neighbor_matrix_strip(18);
     /* memcpy(plotSScreen, saveSScreen, BUFFER_SIZE); */
-    load_neighbor_matrix(18, 0);
+    load_neighbor_matrix_strip(18);
     memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
     FastCopy();
 
