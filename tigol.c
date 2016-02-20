@@ -59,11 +59,9 @@ bool new_cell(int live_neighbors, bool current)
     case 3:
         /* reproduction */
         return true;
-        break;
     default:
         /* death by overcrowding */
         return false;
-        break;
     }
 }
 
@@ -73,7 +71,10 @@ void take_step()
     unsigned char *src_byte = plotSScreen;
     unsigned char *start = plotSScreen;
     unsigned char *end = plotSScreen + BUFFER_SIZE;
-    unsigned char *end_row = plotSScreen + SCREEN_WIDTH_BYTES;
+    /* first byte of the current row */
+    unsigned char *start_row = plotSScreen;
+    /* last byte of the current row */
+    unsigned char *end_row = plotSScreen + SCREEN_WIDTH_BYTES - 1;
     unsigned char *dst_byte = appBackUpScreen;
     int bit = 0;
     unsigned char *i;
@@ -89,10 +90,14 @@ void take_step()
         for (i = src_byte-SCREEN_WIDTH_BYTES;
                 i <= src_byte+SCREEN_WIDTH_BYTES; i+=SCREEN_WIDTH_BYTES)
             for (j = bit-1; j <= bit+1; j++)
-                if (start <= i && i < end && 0 <= j &&
-                     ((j < 8 && get_bit(src_byte, j)) ||
-                      (j == 8 && src_byte < end_row && get_bit(src_byte+1, 0))))
-                    live_neighbors++;
+                if (start <= i && i < end) {
+                    if (j == -1 && src_byte > start_row && get_bit(src_byte-1, 7))
+                        live_neighbors++;
+                    else if (j == 8 && src_byte < end_row && get_bit(src_byte+1, 0))
+                        live_neighbors++;
+                    else if (0 <= j && j < 8 && get_bit(src_byte, j))
+                        live_neighbors++;
+                }
         /* the above loop will count a cell as its own neighbor, so we need to compensate */
         if (get_bit(src_byte, bit))
             live_neighbors--;
@@ -102,8 +107,10 @@ void take_step()
             bit = 0;
             src_byte++;
             dst_byte++;
-            if (src_byte > end_row)
+            if (src_byte > end_row) {
+                start_row += SCREEN_WIDTH_BYTES;
                 end_row += SCREEN_WIDTH_BYTES;
+            }
         }
     }
 
@@ -116,22 +123,13 @@ void take_step()
 int main()
 {
     memset(appBackUpScreen, 0, BUFFER_SIZE);
-    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES+4, 0, true);
-    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES+4, 1, true);
-    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES+4, 2, true);
+    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES, 4, true);
+    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES, 5, true);
+    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES, 6, true);
     memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
     FastCopy();
 
-    GetKey();
-
-    penRow = 0;
-    penCol = 0;
-    VPutS("before first step...");
     take_step();
     penCol = 0;
-    VPutS("after first step");
-    GetKey();
-    take_step();
-
     return 0;
 }
