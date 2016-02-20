@@ -170,11 +170,13 @@ void fill_neighbor_matrix(int y_start, int x_start)
     for (row = 0; row < BLOCK_HEIGHT; row++) {
         for (col = 0; col < BLOCK_WIDTH; col++) {
             if (get_bit(byte, bit)) {
-                i = (row > 0) ? row-1 : 0;
-                j = (col > 0) ? col-1 : 0;
-                for (; i <= row+1 && i < BLOCK_HEIGHT; i++)
-                    for (; j <= col+1 && j < BLOCK_WIDTH; j++)
+                i = (row > 0) ? row-1 : row;
+                for (; i <= row+1 && i < BLOCK_HEIGHT; i++) {
+                    j = (col > 0) ? col-1 : col;
+                    for (; j <= col+1 && j < BLOCK_WIDTH; j++) {
                         neighbor_matrix[i][j]++;
+                    }
+                }
                 /* the above loop counts a cell as its own neighbor */
                 neighbor_matrix[row][col]--;
             }
@@ -219,6 +221,7 @@ void load_neighbor_matrix(int y_start, int x_start)
             else if (num_neighbors == 3)
                 set_bit(byte, bit, true);
 
+            bit++;
             if (bit == 8) {
                 bit = 0;
                 byte++;
@@ -232,9 +235,11 @@ void load_neighbor_matrix(int y_start, int x_start)
 
 int main()
 {
-    int i;
     unsigned char *test_byte = appBackUpScreen + 20*SCREEN_WIDTH_BYTES;
 
+    DisableAPD();
+
+    memset(saveSScreen, 0, BUFFER_SIZE);
     memset(appBackUpScreen, 0, BUFFER_SIZE);
     set_bit(test_byte, 6, true);
     set_bit(test_byte, 7, true);
@@ -242,14 +247,17 @@ int main()
     memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
     FastCopy();
 
-    take_step();
     GetKey();
-    for (i = 0; i < 8; i++) {
-        if (get_bit(test_byte, i))
-            PutC('*');
-        else
-            PutC('0');
-    }
+
+    fill_neighbor_matrix(18, 0);
+    /* memcpy(plotSScreen, saveSScreen, BUFFER_SIZE); */
+    load_neighbor_matrix(18, 0);
+    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
+    FastCopy();
+
+    GetKey();
+
+    EnableAPD();
 
     return 0;
 }
