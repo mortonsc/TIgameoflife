@@ -1,7 +1,9 @@
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
 #include "inc/ti84plus.h"
 #include "inc/fastcopy.h"
+
 
 /*
  * Code by Scott Morton 2016
@@ -12,6 +14,8 @@
 void assert(int cond, const char *err)
 {
     if (!cond) {
+        penRow = 0;
+        penCol = 0;
         VPutS(err);
         /* pause so I can actually see the error */
         GetKey();
@@ -77,8 +81,11 @@ void take_step()
     unsigned char *end_row = plotSScreen + SCREEN_WIDTH_BYTES - 1;
     unsigned char *dst_byte = appBackUpScreen;
     int bit = 0;
+
+    /* iteration vars */
     unsigned char *i;
     int j;
+
     int live_neighbors;
 
     while (src_byte < end) {
@@ -90,17 +97,16 @@ void take_step()
         for (i = src_byte-SCREEN_WIDTH_BYTES;
                 i <= src_byte+SCREEN_WIDTH_BYTES; i+=SCREEN_WIDTH_BYTES)
             for (j = bit-1; j <= bit+1; j++)
-                if (start <= i && i < end) {
-                    if (j == -1 && src_byte > start_row && get_bit(src_byte-1, 7))
+                if (start <= i && i < end &&
+                    ( (j == -1 && src_byte > start_row && get_bit(i-1, 7))
+                    || (j == 8 && src_byte < end_row && get_bit(i+1, 0))
+                    || (0 <= j && j < 8 && get_bit(i, j)) ) ) {
                         live_neighbors++;
-                    else if (j == 8 && src_byte < end_row && get_bit(src_byte+1, 0))
-                        live_neighbors++;
-                    else if (0 <= j && j < 8 && get_bit(src_byte, j))
-                        live_neighbors++;
-                }
+                    }
         /* the above loop will count a cell as its own neighbor, so we need to compensate */
-        if (get_bit(src_byte, bit))
+        if (get_bit(src_byte, bit)) {
             live_neighbors--;
+        }
         set_bit(dst_byte, bit, new_cell(live_neighbors, get_bit(src_byte, bit)));
         bit++;
         if (bit == 8) {
@@ -122,14 +128,24 @@ void take_step()
 
 int main()
 {
+    int i;
+    unsigned char *test_byte = appBackUpScreen + 20*SCREEN_WIDTH_BYTES;
+
     memset(appBackUpScreen, 0, BUFFER_SIZE);
-    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES, 4, true);
-    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES, 5, true);
-    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES, 6, true);
+    set_bit(test_byte, 4, true);
+    set_bit(test_byte, 5, true);
+    set_bit(test_byte, 6, true);
     memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
     FastCopy();
 
     take_step();
-    penCol = 0;
+    GetKey();
+    for (i = 0; i < 8; i++) {
+        if (get_bit(test_byte, i))
+            PutC('*');
+        else
+            PutC('0');
+    }
+
     return 0;
 }
