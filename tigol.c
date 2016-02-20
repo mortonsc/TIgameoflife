@@ -25,7 +25,7 @@ void set_bit(unsigned char *byte, int n, bool val)
 {
 
     /* ex. if n = 3, mask is 0010 0000b */
-    int mask = 0x8000 >> n;
+    unsigned char mask = 0x80 >> n;
 
     if (val) {
         /* set the nth bit to 1, without affecting the others */
@@ -116,9 +116,9 @@ void take_step()
 int main()
 {
     memset(appBackUpScreen, 0, BUFFER_SIZE);
-    set_bit(appBackUpScreen+SCREEN_WIDTH_BYTES+4, 0, true);
-    set_bit(appBackUpScreen+SCREEN_WIDTH_BYTES+4, 1, true);
-    set_bit(appBackUpScreen+SCREEN_WIDTH_BYTES+4, 2, true);
+    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES+4, 0, true);
+    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES+4, 1, true);
+    set_bit(appBackUpScreen + 20*SCREEN_WIDTH_BYTES+4, 2, true);
     memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
     FastCopy();
 
