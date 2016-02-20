@@ -69,6 +69,9 @@ bool new_cell(int live_neighbors, bool current)
     }
 }
 
+/*
+ * Moves the game forward one step.
+ */
 void take_step()
 {
     /* iteration vars */
@@ -126,15 +129,30 @@ void take_step()
     FastCopy();
 }
 
+#define BLOCK_WIDTH 25
+#define BLOCK_HEIGHT 30
+
+/*
+ * Another (better?) implementation of take_step.
+ * If we had unlimited memory, we would make a new matrix of how many
+ * live neighbors each cell has. We don't have enough memory for that,
+ * but we can do it in steps.
+ * This way requires both appBackUpScreen and saveSScreen
+ */
+void take_step_block(int y_start, int x_start)
+{
+
+}
+
 int main()
 {
     int i;
     unsigned char *test_byte = appBackUpScreen + 20*SCREEN_WIDTH_BYTES;
 
     memset(appBackUpScreen, 0, BUFFER_SIZE);
-    set_bit(test_byte, 4, true);
-    set_bit(test_byte, 5, true);
     set_bit(test_byte, 6, true);
+    set_bit(test_byte, 7, true);
+    set_bit(test_byte+1, 0, true);
     memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
     FastCopy();
 
