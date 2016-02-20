@@ -123,6 +123,7 @@ void fill_neighbor_matrix(int origin_y, int origin_x)
  * to their new values
  * The only pixels set are those whose correspond elements in neighbor_matrix
  * are within the rectangle bounded by x_start, x_end, y_start, y_end
+ * (start values inclusive, end values exclusive)
  * This assumes appBackUpScreen contains their current values
  */
 void load_neighbor_matrix(int origin_y, int origin_x,
@@ -264,8 +265,9 @@ void take_step()
     int origin_x = 0;
 
     /* what rows of the block to actually print */
+    /* for the upper blocks, we leave out the bottom row */
     int y_start = 0;
-    int y_end = BLOCK_HEIGHT - 2;
+    int y_end = BLOCK_HEIGHT - 1;
 
     /* iteration vars */
     int i;
@@ -280,7 +282,7 @@ void take_step()
             /* update this part of the screen */
             fill_neighbor_matrix(origin_y, origin_x);
             load_neighbor_matrix(origin_y, origin_x,
-                    y_start, y_end, origin_x, origin_x + BLOCK_WIDTH - 2);
+                    y_start, y_end, origin_x, origin_x + BLOCK_WIDTH - 1);
 
             /* copy over the values on the rightmost column */
             for (i = 0; i < BLOCK_HEIGHT; i++)
@@ -298,14 +300,17 @@ void take_step()
         /* final block */
         fill_neighbor_matrix(origin_y, origin_x);
         load_neighbor_matrix(origin_y, origin_x,
-                y_start, y_end, origin_x, origin_x + BLOCK_WIDTH - 1);
+                y_start, y_end, origin_x, origin_x + BLOCK_WIDTH);
         memset(saveSScreen, 0, BUFFER_SIZE);
 
         /* move to the second row of blocks */
-        origin_y = SCREEN_HEIGHT - BLOCK_HEIGHT - 1;
-        y_start = origin_y + 1;
+        origin_y = SCREEN_HEIGHT - BLOCK_HEIGHT;
+        /* don't print the top row */
+        y_start = 1;
+        y_end = BLOCK_HEIGHT - 1;
         origin_x = 0;
         block_row++;
+        block = 0;
     }
 
     /* finally the strip in the middle */
@@ -318,6 +323,7 @@ void take_step()
 
 int main()
 {
+    int i;
     unsigned char *test_byte = appBackUpScreen + 20*SCREEN_WIDTH_BYTES;
 
     DisableAPD();
@@ -333,7 +339,14 @@ int main()
 
     GetKey();
 
-    take_step();
+    for (i = 0; i < 20; i++) {
+        /* take_step(); */
+        fill_neighbor_matrix_strip(STRIP_TOP);
+        load_neighbor_matrix_strip(STRIP_TOP);
+        memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
+        memset(saveSScreen, 0, BUFFER_SIZE);
+        FastCopy();
+    }
 
     GetKey();
 
