@@ -133,32 +133,69 @@ void take_step()
 #define BLOCK_HEIGHT 30
 
 /*
- * Another (better?) implementation of take_step.
+ * a matrix located in saveSScreen
+ * it would be more honest to cast saveSScreen the right type
+ * but I couldn't figure out how to do that
+ */
+__at 0x86EC unsigned char neighbor_matrix[BLOCK_HEIGHT][BLOCK_WIDTH];
+
+/*
+ * Fills neighbor_matrix with the number of live neighbors of each pixel in the
+ * BLOCK_HEIGHT x BLOCK_WIDTH rectangle with upper-left corner (y_start, x_start)
+ *
+ * Part of another (better?) implementation of take_step.
  * If we had unlimited memory, we would make a new matrix of how many
  * live neighbors each cell has. We don't have enough memory for that,
  * but we can do it in steps.
  * This way requires both appBackUpScreen and saveSScreen
  */
-void take_step_block(int y_start, int x_start)
+void fill_neighbor_matrix(int y_start, int x_start)
 {
-    unsigned char *src_byte = plotSScreen + x_start / 8;
-    int src_bit = x_start % 8;
+    unsigned char *byte = plotSScreen + y_start*SCREEN_WIDTH_BYTES + x_start / 8;
+    int bit = x_start % 8;
 
     /*
      *  these variables serve as markers
      */
-    unsigned char *end_byte =
-        src_byte + SCREEN_WIDTH_BYTES*BLOCK_HEIGHT + BLOCK_WIDTH;
-    int end_bit = (x_start + BLOCK_WIDTH) % 8;
-    unsigned char *neighbor_matrix = saveSScreen;
-    unsigned char *dst_byte = appBackUpScreen;
+    unsigned char *start_row = byte;
+    int start_bit = bit;
 
-    /*
-     * It's conceptually easy to convert the byte/bit position in plotSScreen
-     * to the corresponding byte in saveSScreen, but doing so requires division
-     * and mod, which are expensive operations
-     * so we just have to keep the corresponding variables in lockstep
-     */
+    /* iteration vars */
+    int row;
+    int col;
+    int i;
+    int j;
+
+    for (row = 0; row < BLOCK_HEIGHT; row++) {
+        for (col = 0; col < BLOCK_WIDTH; col++) {
+            if (get_bit(byte, bit)) {
+                i = (row > 0) ? row-1 : 0;
+                j = (col > 0) ? col-1 : 0;
+                for (; i <= row+1 && i < BLOCK_HEIGHT; i++)
+                    for (; j <= col+1 && j < BLOCK_WIDTH; j++)
+                        neighbor_matrix[i][j]++;
+                /* the above loop counts a cell as its own neighbor */
+                neighbor_matrix[row][col]--;
+            }
+            bit++;
+            if (bit == 8) {
+                bit = 0;
+                byte++;
+            }
+        }
+        start_row = start_row + SCREEN_WIDTH_BYTES;
+        byte = start_row;
+        bit = start_bit;
+    }
+}
+
+/*
+ * Based on the values in neighbor_matrix, set the pixels in appBackUpScreen
+ * to their new values
+ * At some point this will need to be albe to exclude some rows/columns
+ */
+void load_neighbor_matrix(int y_start, int x_start)
+{
 
 }
 
