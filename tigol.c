@@ -141,6 +141,24 @@ void take_step()
  */
 void take_step_block(int y_start, int x_start)
 {
+    unsigned char *src_byte = plotSScreen + x_start / 8;
+    int src_bit = x_start % 8;
+
+    /*
+     *  these variables serve as markers
+     */
+    unsigned char *end_byte =
+        src_byte + SCREEN_WIDTH_BYTES*BLOCK_HEIGHT + BLOCK_WIDTH;
+    int end_bit = (x_start + BLOCK_WIDTH) % 8;
+    unsigned char *neighbor_matrix = saveSScreen;
+    unsigned char *dst_byte = appBackUpScreen;
+
+    /*
+     * It's conceptually easy to convert the byte/bit position in plotSScreen
+     * to the corresponding byte in saveSScreen, but doing so requires division
+     * and mod, which are expensive operations
+     * so we just have to keep the corresponding variables in lockstep
+     */
 
 }
 
