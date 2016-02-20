@@ -54,12 +54,17 @@ bool get_bit(unsigned char *byte, int n)
 #define BLOCK_WIDTH 25
 #define BLOCK_HEIGHT 30
 
+#define STRIP_HEIGHT 8
+#define STRIP_WIDTH 96
+
 /*
- * a matrix located in saveSScreen
- * it would be more honest to cast saveSScreen the right type
+ * matrices located in saveSScreen
+ * it would be more honest to cast saveSScreen to arrays
  * but I couldn't figure out how to do that
  */
 __at 0x86EC unsigned char neighbor_matrix[BLOCK_HEIGHT][BLOCK_WIDTH];
+__at 0x86EC unsigned char neighbor_matrix_strip[STRIP_HEIGHT][STRIP_WIDTH];
+
 
 /*
  * Fills neighbor_matrix with the number of live neighbors of each pixel in the
@@ -154,6 +159,93 @@ void load_neighbor_matrix(int y_start, int x_start)
         bit = start_bit;
     }
 }
+
+/*
+ * Fills neighbor_matrix_strip with the number of neighbors of each cell
+ * along the middle strip
+ * There is no x_start parameter because it always starts from x = 0
+ */
+void fill_neighbor_matrix_strip(int y_start)
+{
+    unsigned char *byte
+        = plotSScreen + y_start*SCREEN_WIDTH_BYTES;
+    int bit = 0;
+
+    /*
+     *  these variables serve as markers
+     */
+    unsigned char *start_row = byte;
+
+    /* iteration vars */
+    int row;
+    int col;
+    int i;
+    int j;
+
+    for (row = 0; row < STRIP_HEIGHT; row++) {
+        for (col = 0; col < STRIP_WIDTH; col++) {
+            if (get_bit(byte, bit)) {
+                i = (row > 0) ? row-1 : row;
+                for (; i <= row+1 && i < STRIP_HEIGHT; i++) {
+                    j = (col > 0) ? col-1 : col;
+                    for (; j <= col+1 && j < STRIP_WIDTH; j++) {
+                        neighbor_matrix[i][j]++;
+                    }
+                }
+                /* the above loop counts a cell as its own neighbor */
+                neighbor_matrix[row][col]--;
+            }
+            bit++;
+            if (bit == 8) {
+                bit = 0;
+                byte++;
+            }
+        }
+        start_row = start_row + SCREEN_WIDTH_BYTES;
+        byte = start_row;
+        bit = 0;
+    }
+}
+
+/*
+ * Based on the values in neighbor_matrix, set the pixels in appBackUpScreen
+ * to their new values along the middle strip
+ * This assumes appBackUpScreen contains their current values
+ */
+void load_neighbor_matrix(int y_start)
+{
+    unsigned char *byte
+        = appBackUpScreen + y_start*SCREEN_WIDTH_BYTES;
+    int bit = 0;
+
+    unsigned char *start_row = byte;
+
+    /* iteration vars */
+    int row;
+    int col;
+
+    int num_neighbors;
+
+    for (row = 0; row < STRIP_HEIGHT; row++) {
+        for (col = 0; col < STRIP_WIDTH; col++) {
+            num_neighbors = neighbor_matrix[row][col];
+            if (num_neighbors < 2 || num_neighbors > 3)
+                set_bit(byte, bit, false);
+            else if (num_neighbors == 3)
+                set_bit(byte, bit, true);
+
+            bit++;
+            if (bit == 8) {
+                bit = 0;
+                byte++;
+            }
+        }
+        start_row = start_row + SCREEN_WIDTH_BYTES;
+        byte = start_row;
+        bit = 0;
+    }
+}
+
 
 int main()
 {
