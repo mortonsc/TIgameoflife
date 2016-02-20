@@ -211,6 +211,7 @@ void fill_neighbor_matrix_strip(int origin_y)
 /*
  * Based on the values in neighbor_matrix, set the pixels in appBackUpScreen
  * to their new values along the middle strip
+ * doesn't set the top or bottom rows
  * This assumes appBackUpScreen contains their current values
  */
 void load_neighbor_matrix_strip(int origin_y)
@@ -227,7 +228,7 @@ void load_neighbor_matrix_strip(int origin_y)
 
     int num_neighbors;
 
-    for (row = 0; row < STRIP_HEIGHT; row++) {
+    for (row = 1; row < STRIP_HEIGHT-1; row++) {
         for (col = 0; col < STRIP_WIDTH; col++) {
             num_neighbors = neighbor_matrix_strip[row][col];
             if (num_neighbors < 2 || num_neighbors > 3)
@@ -246,6 +247,8 @@ void load_neighbor_matrix_strip(int origin_y)
         bit = 0;
     }
 }
+
+#define STRIP_TOP 28
 
 /*
  * Advances the game by one step
@@ -268,7 +271,6 @@ void take_step()
     int i;
     int j;
 
-    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
     memset(saveSScreen, 0, BUFFER_SIZE);
 
     /* this loop executes twice: once for each row of blocks */
@@ -305,6 +307,13 @@ void take_step()
         origin_x = 0;
         block_row++;
     }
+
+    /* finally the strip in the middle */
+    fill_neighbor_matrix_strip(STRIP_TOP);
+    load_neighbor_matrix_strip(STRIP_TOP);
+
+    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
+    FastCopy();
 }
 
 int main()
@@ -314,22 +323,21 @@ int main()
     DisableAPD();
 
     memset(saveSScreen, 0, BUFFER_SIZE);
-    memset(appBackUpScreen, 0, BUFFER_SIZE);
-    set_bit(test_byte, 6, true);
-    set_bit(test_byte, 7, true);
-    set_bit(test_byte+1, 0, true);
-    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
+    /* memset(appBackUpScreen, 0, BUFFER_SIZE); */
+    /* set_bit(test_byte, 6, true); */
+    /* set_bit(test_byte, 7, true); */
+    /* set_bit(test_byte+1, 0, true); */
+    /* memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE); */
+    memcpy(appBackUpScreen, plotSScreen, BUFFER_SIZE);
     FastCopy();
 
     GetKey();
 
-    fill_neighbor_matrix_strip(18);
-    /* memcpy(plotSScreen, saveSScreen, BUFFER_SIZE); */
-    load_neighbor_matrix_strip(18);
-    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
-    FastCopy();
+    take_step();
 
     GetKey();
+
+    ClrLCDFull();
 
     EnableAPD();
 
