@@ -64,7 +64,7 @@ void take_step()
     int live_neighbors;
 
     /*
-     * iterate over every pixel of the screen to determine it's new state
+     * iterate over every pixel of the screen to determine its new state
      */
     for (y = 0; y < SCREEN_HEIGHT; y++) {
         for (x = 0; x < SCREEN_WIDTH; x++) {
@@ -101,9 +101,23 @@ void take_step()
 
     /* copy in the new values */
     memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
+    /* display the updated screen */
+    FastCopy();
 }
 
 int main()
 {
+    memset(appBackUpScreen, 0, BUFFER_SIZE);
+    set_pixel(3, 10, true);
+    set_pixel(3, 11, true);
+    set_pixel(3, 12, true);
+    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
+    FastCopy();
+
+    GetKey();
+    take_step();
+    GetKey();
+    take_step();
+
     return 0;
 }
