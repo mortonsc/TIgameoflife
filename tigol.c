@@ -1,6 +1,5 @@
 #include <stdbool.h>
 #include <string.h>
-#include <stdio.h>
 #include "inc/ti84plus.h"
 #include "inc/fastcopy.h"
 
