@@ -59,17 +59,21 @@ __at 0x86EC unsigned char neighbor_matrix_strip[STRIP_HEIGHT][STRIP_WIDTH];
 
 /*
  * Fills neighbor_matrix with the number of live neighbors of each pixel in the
- * BLOCK_HEIGHT x BLOCK_WIDTH rectangle with upper-left corner (origin_y, origin_x)
+ * BLOCK_HEIGHT x BLOCK_WIDTH rectangle with upper-left pixel (origin_y, origin_x)
+ *
+ * If complete_final_column is false, it will not calculate the final values
+ * of the final column. Specifically, the values of the final column will only
+ * show number of neighbors in the second-to-last column. This means that
+ * moving the values in the final column to the first, and then running this
+ * function again with the corresponding block, will leave that column with
+ * the correct final values.
  */
-void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column)
+void generate_neighbor_matrix_block(int origin_y, int origin_x, bool complete_final_column)
 {
     unsigned char *byte
-        = plotSScreen + origin_y*SCREEN_WIDTH_BYTES + origin_x / 8;
+        = plotSScreen + origin_y*SCREEN_WIDTH_BYTES + origin_x/8;
     unsigned char mask = 0x80 >> (origin_x % 8);
 
-    /*
-     *  these variables serve as markers
-     */
     unsigned char *start_row = byte;
     unsigned char start_mask = mask;
 
@@ -106,7 +110,7 @@ void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column
             }
         }
         /* advance to the next row */
-        start_row = start_row + SCREEN_WIDTH_BYTES;
+        start_row += SCREEN_WIDTH_BYTES;
         byte = start_row;
         mask = start_mask;
     }
@@ -130,14 +134,16 @@ void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column
 }
 
 /*
- * Based on the values in neighbor_matrix, set the pixels in appBackUpScreen
- * to their new values
- * The only pixels set are those whose correspond elements in neighbor_matrix
- * are within the rectangle bounded by 0, x_end, y_start, y_end
- * (start values inclusive, end values exclusive)
- * This assumes appBackUpScreen contains their current values
+ * Based on the values in neighbor_matrix, updates the cells in appBackUpScreen
+ * in the block with upper-left corner (origin_y, origin_x).
+ *
+ * The only pixels set are those that correspond to elements in neighbor_matrix
+ * within the rectangle bounded by 0, x_end, y_start, y_end
+ * (start values inclusive, end values exclusive).
+ *
+ * Assumes that appBackUpScreen contains the current values of each cell.
  */
-void load_neighbor_matrix(int origin_y, int origin_x,
+void load_neighbor_matrix_block(int origin_y, int origin_x,
         int y_start, int y_end, int x_end)
 {
     unsigned char *byte = appBackUpScreen
@@ -169,7 +175,7 @@ void load_neighbor_matrix(int origin_y, int origin_x,
                 byte++;
             }
         }
-        start_row = start_row + SCREEN_WIDTH_BYTES;
+        start_row += SCREEN_WIDTH_BYTES;
         byte = start_row;
         mask = start_mask;
     }
@@ -177,10 +183,12 @@ void load_neighbor_matrix(int origin_y, int origin_x,
 
 /*
  * Fills neighbor_matrix_strip with the number of neighbors of each cell
- * along the middle strip
- * There is no origin_x parameter because it always starts from x = 0
+ * along the middle strip.
+ *
+ * There is no origin_x parameter because the strip fills the whole width of
+ * the screen.
  */
-void fill_neighbor_matrix_strip(int origin_y)
+void generate_neighbor_matrix_strip(int origin_y)
 {
     unsigned char *byte
         = plotSScreen + origin_y*SCREEN_WIDTH_BYTES;
@@ -217,7 +225,7 @@ void fill_neighbor_matrix_strip(int origin_y)
                 }
             }
         }
-        start_row = start_row + SCREEN_WIDTH_BYTES;
+        start_row += SCREEN_WIDTH_BYTES;
         byte = start_row;
         mask = 0x80;
     }
@@ -257,7 +265,7 @@ void load_neighbor_matrix_strip(int origin_y)
                 byte++;
             }
         }
-        start_row = start_row + SCREEN_WIDTH_BYTES;
+        start_row += SCREEN_WIDTH_BYTES;
         byte = start_row;
         mask = 0x80;
     }
@@ -294,8 +302,8 @@ void take_step()
         /* first three blocks */
         while (block < 3) {
             /* update this part of the screen */
-            fill_neighbor_matrix(origin_y, origin_x, false);
-            load_neighbor_matrix(origin_y, origin_x,
+            generate_neighbor_matrix_block(origin_y, origin_x, false);
+            load_neighbor_matrix_block(origin_y, origin_x,
                     y_start, y_end, BLOCK_WIDTH - 1);
 
             /* copy over the values on the rightmost column */
@@ -312,8 +320,8 @@ void take_step()
             block++;
         }
         /* final block */
-        fill_neighbor_matrix(origin_y, origin_x, true);
-        load_neighbor_matrix(origin_y, origin_x, y_start, y_end, BLOCK_WIDTH);
+        generate_neighbor_matrix_block(origin_y, origin_x, true);
+        load_neighbor_matrix_block(origin_y, origin_x, y_start, y_end, BLOCK_WIDTH);
         memset(saveSScreen, 0, BUFFER_SIZE);
 
         /* move to the second row of blocks */
@@ -327,7 +335,7 @@ void take_step()
     }
 
     /* finally the strip in the middle */
-    fill_neighbor_matrix_strip(STRIP_TOP);
+    generate_neighbor_matrix_strip(STRIP_TOP);
     load_neighbor_matrix_strip(STRIP_TOP);
 
     memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
@@ -339,16 +347,15 @@ enum State {RUNNING, PAUSED, DONE};
 int main()
 {
     unsigned char sk;
-    int i;
 
     enum State state = PAUSED;
 
+    /* disable automatic power down, it interferes with saveSScreen */
     DisableAPD();
 
     memset(saveSScreen, 0, BUFFER_SIZE);
     memcpy(appBackUpScreen, plotSScreen, BUFFER_SIZE);
     FastCopy();
-
 
     while (state != DONE) {
         sk = GetCSC();
