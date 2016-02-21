@@ -73,6 +73,8 @@ void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column
     unsigned char *start_row = byte;
     unsigned char start_mask = mask;
 
+    int end_column = complete_final_column ? BLOCK_WIDTH : BLOCK_WIDTH - 1;
+
     /* iteration vars */
     int row;
     int col;
@@ -80,25 +82,17 @@ void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column
     int j;
 
     for (row = 0; row < BLOCK_HEIGHT; row++) {
-        for (col = 0; col < BLOCK_WIDTH; col++) {
+        for (col = 0; col < end_column; col++) {
             if (*byte & mask) {
-                if (col < BLOCK_WIDTH - 1 || complete_final_column) {
-                    i = (row > 0) ? row-1 : row;
-                    for (; i <= row+1 && i < BLOCK_HEIGHT; i++) {
-                        j = (col > 0) ? col-1 : col;
-                        for (; j <= col+1 && j < BLOCK_WIDTH; j++) {
-                            neighbor_matrix[i][j]++;
-                        }
-                    }
-                    /* the above loop counts a cell as its own neighbor */
-                    neighbor_matrix[row][col]--;
-                } else {
-                    /* only update values on the column to the left */
-                    i = (row > 0) ? row-1 : row;
-                    j = col - 1;
-                    for (; i <= row+1 && i < BLOCK_HEIGHT; i++)
+                i = (row > 0) ? row-1 : row;
+                for (; i <= row+1 && i < BLOCK_HEIGHT; i++) {
+                    j = (col > 0) ? col-1 : col;
+                    for (; j <= col+1 && j < BLOCK_WIDTH; j++) {
                         neighbor_matrix[i][j]++;
+                    }
                 }
+                /* the above loop counts a cell as its own neighbor */
+                neighbor_matrix[row][col]--;
             }
             mask >>= 1;
             if (!mask) {
@@ -116,23 +110,40 @@ void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column
         byte = start_row;
         mask = start_mask;
     }
+
+    /* do a partial run over the final column */
+    if (!complete_final_column) {
+        col = BLOCK_WIDTH - 1;
+        j = col - 1;
+        byte = plotSScreen + origin_y*SCREEN_WIDTH_BYTES + (origin_x + col)/8;
+        mask = 0x80 >> ((origin_x + col) % 8);
+        for (row = 0; row < BLOCK_HEIGHT; row++) {
+            if (*byte & mask) {
+                i = (row > 0) ? row-1 : row;
+                for (; i < row+1 && i < BLOCK_HEIGHT; i++) {
+                    neighbor_matrix[i][j]++;
+                }
+            }
+            byte += SCREEN_WIDTH_BYTES;
+        }
+    }
 }
 
 /*
  * Based on the values in neighbor_matrix, set the pixels in appBackUpScreen
  * to their new values
  * The only pixels set are those whose correspond elements in neighbor_matrix
- * are within the rectangle bounded by x_start, x_end, y_start, y_end
+ * are within the rectangle bounded by 0, x_end, y_start, y_end
  * (start values inclusive, end values exclusive)
  * This assumes appBackUpScreen contains their current values
  */
 void load_neighbor_matrix(int origin_y, int origin_x,
-        int y_start, int y_end, int x_start, int x_end)
+        int y_start, int y_end, int x_end)
 {
     unsigned char *byte = appBackUpScreen
-        + (origin_y+y_start)*SCREEN_WIDTH_BYTES + (origin_x+x_start) / 8;
+        + (origin_y+y_start)*SCREEN_WIDTH_BYTES + (origin_x) / 8;
 
-    unsigned char mask = 0x80 >> ((origin_x + x_start) % 8);
+    unsigned char mask = 0x80 >> (origin_x % 8);
 
     unsigned char *start_row = byte;
     unsigned char start_mask = mask;
@@ -145,7 +156,7 @@ void load_neighbor_matrix(int origin_y, int origin_x,
     int num_neighbors;
 
     for (row = y_start; row < y_end; row++) {
-        for (col = x_start; col < x_end; col++) {
+        for (col = 0; col < x_end; col++) {
             num_neighbors = neighbor_matrix[row][col];
             if ((*byte & mask) && (num_neighbors < 2 || num_neighbors > 3))
                 *byte ^= mask;
@@ -285,7 +296,7 @@ void take_step()
             /* update this part of the screen */
             fill_neighbor_matrix(origin_y, origin_x, false);
             load_neighbor_matrix(origin_y, origin_x,
-                    y_start, y_end, 0, BLOCK_WIDTH - 1);
+                    y_start, y_end, BLOCK_WIDTH - 1);
 
             /* copy over the values on the rightmost column */
             for (i = 0; i < BLOCK_HEIGHT; i++)
@@ -302,8 +313,7 @@ void take_step()
         }
         /* final block */
         fill_neighbor_matrix(origin_y, origin_x, true);
-        load_neighbor_matrix(origin_y, origin_x,
-                y_start, y_end, 0, BLOCK_WIDTH);
+        load_neighbor_matrix(origin_y, origin_x, y_start, y_end, BLOCK_WIDTH);
         memset(saveSScreen, 0, BUFFER_SIZE);
 
         /* move to the second row of blocks */
@@ -359,8 +369,8 @@ int main()
         }
     }
 
-    curRow = 0;
     ClrLCDFull();
+    curRow = 0;
 
     EnableAPD();
 
