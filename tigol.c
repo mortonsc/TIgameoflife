@@ -361,11 +361,13 @@ int main()
         sk = GetCSC();
         switch (state) {
         case RUNNING:
+            RunIndicatorOff();
             if (sk == skEnter)
                 state = PAUSED;
             take_step();
             break;
         case PAUSED:
+            RunIndicatorOn();
             if (sk == skAdd)
                 state = RUNNING;
             else if (sk == skSub)
