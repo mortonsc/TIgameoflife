@@ -140,6 +140,7 @@ void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column
                 }
             }
         }
+        /* advance to the next row */
         start_row = start_row + SCREEN_WIDTH_BYTES;
         byte = start_row;
         mask = start_mask;
@@ -159,10 +160,12 @@ void load_neighbor_matrix(int origin_y, int origin_x,
 {
     unsigned char *byte = appBackUpScreen
         + (origin_y+y_start)*SCREEN_WIDTH_BYTES + (origin_x+x_start) / 8;
-    int bit = (origin_x+x_start) % 8;
+
+    unsigned char mask = 0x80 >> ((origin_x + x_start) % 8);
 
     unsigned char *start_row = byte;
-    int start_bit = bit;
+    unsigned char start_mask = mask;
+
 
     /* iteration vars */
     int row;
@@ -173,20 +176,20 @@ void load_neighbor_matrix(int origin_y, int origin_x,
     for (row = y_start; row < y_end; row++) {
         for (col = x_start; col < x_end; col++) {
             num_neighbors = neighbor_matrix[row][col];
-            if (num_neighbors < 2 || num_neighbors > 3)
-                set_bit(byte, bit, false);
+            if ((*byte & mask) && (num_neighbors < 2 || num_neighbors > 3))
+                *byte ^= mask;
             else if (num_neighbors == 3)
-                set_bit(byte, bit, true);
+                *byte |= mask;
 
-            bit++;
-            if (bit == 8) {
-                bit = 0;
+            mask >>= 1;
+            if (!mask) {
+                mask = 0x80;
                 byte++;
             }
         }
         start_row = start_row + SCREEN_WIDTH_BYTES;
         byte = start_row;
-        bit = start_bit;
+        mask = start_mask;
     }
 }
 
@@ -199,7 +202,7 @@ void fill_neighbor_matrix_strip(int origin_y)
 {
     unsigned char *byte
         = plotSScreen + origin_y*SCREEN_WIDTH_BYTES;
-    int bit = 0;
+    unsigned char mask = 0x80;
 
     unsigned char *start_row = byte;
 
@@ -211,7 +214,7 @@ void fill_neighbor_matrix_strip(int origin_y)
 
     for (row = 0; row < STRIP_HEIGHT; row++) {
         for (col = 0; col < STRIP_WIDTH; col++) {
-            if (get_bit(byte, bit)) {
+            if (*byte & mask) {
                 i = (row > 0) ? row-1 : row;
                 for (; i <= row+1 && i < STRIP_HEIGHT; i++) {
                     j = (col > 0) ? col-1 : col;
@@ -222,15 +225,19 @@ void fill_neighbor_matrix_strip(int origin_y)
                 /* the above loop counts a cell as its own neighbor */
                 neighbor_matrix_strip[row][col]--;
             }
-            bit++;
-            if (bit == 8) {
-                bit = 0;
+            mask >>= 1;
+            if (!mask) {
+                mask = 0x80;
                 byte++;
+                while (!(*byte) && col < STRIP_WIDTH) {
+                    byte++;
+                    col += 8;
+                }
             }
         }
         start_row = start_row + SCREEN_WIDTH_BYTES;
         byte = start_row;
-        bit = 0;
+        mask = 0x80;
     }
 }
 
