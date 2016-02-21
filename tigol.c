@@ -126,7 +126,7 @@ void generate_neighbor_matrix_block(int origin_y, int origin_x, bool complete_fi
         for (row = 0; row < BLOCK_HEIGHT; row++) {
             if (*byte & mask) {
                 i = (row > 0) ? row-1 : row;
-                for (; i < row+1 && i < BLOCK_HEIGHT; i++) {
+                for (; i <= row+1 && i < BLOCK_HEIGHT; i++) {
                     neighbor_matrix[i][j]++;
                 }
             }
