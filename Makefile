@@ -14,7 +14,7 @@ tigol.ihx: tigol.c inc/tios_crt0.rel inc/ti84plus.rel inc/fastcopy.rel
 		inc/tios_crt0.rel inc/ti84plus.rel inc/fastcopy.rel tigol.c
 
 inc/ti84plus.rel: inc/ti84plus.c
-	$(CC) $(CFLAGS) -c inc/bkupmem.rel inc/ti84plus.c -o  inc/ti84plus.rel
+	$(CC) $(CFLAGS) -c inc/ti84plus.c -o  inc/ti84plus.rel
 
 inc/fastcopy.rel: inc/fastcopy.asm
 	$(ASM) $(AFLAGS) inc/fastcopy.asm
