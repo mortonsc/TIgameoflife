@@ -4,7 +4,7 @@ ASM=sdasz80
 AFLAGS=-p -g -o
 
 tigol.8xp: tigol.bin
-	binpac8x.py -O tigol tigol.bin
+	binpac8x.py -O conway tigol.bin
 
 tigol.bin: tigol.ihx
 	hex2bin tigol.ihx

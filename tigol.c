@@ -297,10 +297,9 @@ void take_step()
 
     memset(saveSScreen, 0, BUFFER_SIZE);
 
-    /* this loop executes twice: once for each row of blocks */
-    while (block_row < 2) {
+    for (block_row = 0; block_row < 2; block_row++) {
         /* first three blocks */
-        while (block < 3) {
+        for (block = 0; block < 3; block++) {
             /* update this part of the screen */
             generate_neighbor_matrix_block(origin_y, origin_x, false);
             load_neighbor_matrix_block(origin_y, origin_x,
@@ -317,7 +316,6 @@ void take_step()
 
             /* advance to the next block */
             origin_x += BLOCK_WIDTH-1;
-            block++;
         }
         /* final block */
         generate_neighbor_matrix_block(origin_y, origin_x, true);
@@ -330,8 +328,6 @@ void take_step()
         y_start = 1;
         y_end = BLOCK_HEIGHT - 1;
         origin_x = 0;
-        block_row++;
-        block = 0;
     }
 
     /* finally the strip in the middle */
