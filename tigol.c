@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "inc/ti84plus.h"
-#include "inc/DoubleBufferFlip.h"
+#include "inc/fastcopy.h"
 
 
 /*
@@ -338,9 +338,8 @@ void take_step()
     generate_neighbor_matrix_strip();
     load_neighbor_matrix_strip();
 
-    /* memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE); */
-    /* FastCopy(); */
-    DoubleBufferFlip();
+    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
+    FastCopy();
 }
 
 enum State {RUNNING, PAUSED, DONE};
@@ -356,7 +355,7 @@ int main()
 
     memset(saveSScreen, 0, BUFFER_SIZE);
     memcpy(appBackUpScreen, plotSScreen, BUFFER_SIZE);
-    DoubleBufferFlip();
+    FastCopy();
 
     while (state != DONE) {
         sk = GetCSC();
