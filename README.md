@@ -1,5 +1,6 @@
 # TIgameoflife
 John Conway's Game of a life for TI-83+ series calculators.
+![screenshot](/screenshots/screenshot000.gif)
 
 ## Compilation
 The source code for this program is hosted on [github](https://github.com/mortonsc/TIgameoflife "mortonsc/TIgameoflife").
