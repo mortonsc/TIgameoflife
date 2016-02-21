@@ -9,15 +9,12 @@ tigol.8xp: tigol.bin
 tigol.bin: tigol.ihx
 	hex2bin tigol.ihx
 
-tigol.ihx: tigol.c inc/tios_crt0.rel inc/ti84plus.rel inc/fastcopy.rel inc/DoubleBufferFlip.rel
+tigol.ihx: tigol.c inc/tios_crt0.rel inc/ti84plus.rel inc/DoubleBufferFlip.rel
 	$(CC) $(CFLAGS) --code-loc 0x9D9B --data-loc 0 --no-std-crt0 \
-		inc/tios_crt0.rel inc/ti84plus.rel inc/fastcopy.rel inc/DoubleBufferFlip.rel tigol.c
+		inc/tios_crt0.rel inc/ti84plus.rel inc/DoubleBufferFlip.rel tigol.c
 
 inc/ti84plus.rel: inc/ti84plus.c
 	$(CC) $(CFLAGS) -c inc/bkupmem.rel inc/ti84plus.c -o  inc/ti84plus.rel
-
-inc/fastcopy.rel: inc/fastcopy.asm
-	$(ASM) $(AFLAGS) inc/fastcopy.asm
 
 inc/DoubleBufferFlip.rel: inc/DoubleBufferFlip.asm
 	$(ASM) $(AFLAGS) inc/DoubleBufferFlip.asm

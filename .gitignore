@@ -3,6 +3,7 @@ inc/ti83plus.inc
 *.swp
 *.asm
 !inc/fastcopy.asm
+!inc/DoubleBufferFlip.asm
 *.lst
 *.sym
 *.lk
