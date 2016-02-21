@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "inc/ti84plus.h"
-#include "inc/fastcopy.h"
+#include "inc/DoubleBufferFlip.h"
 
 
 /*
@@ -47,6 +47,8 @@
 
 #define STRIP_HEIGHT 8
 #define STRIP_WIDTH 96
+
+#define STRIP_TOP 28
 
 /*
  * matrices located in saveSScreen
@@ -188,10 +190,10 @@ void load_neighbor_matrix_block(int origin_y, int origin_x,
  * There is no origin_x parameter because the strip fills the whole width of
  * the screen.
  */
-void generate_neighbor_matrix_strip(int origin_y)
+void generate_neighbor_matrix_strip()
 {
     unsigned char *byte
-        = plotSScreen + origin_y*SCREEN_WIDTH_BYTES;
+        = plotSScreen + STRIP_TOP*SCREEN_WIDTH_BYTES;
     unsigned char mask = 0x80;
 
     unsigned char *start_row = byte;
@@ -232,15 +234,19 @@ void generate_neighbor_matrix_strip(int origin_y)
 }
 
 /*
- * Based on the values in neighbor_matrix, set the pixels in appBackUpScreen
- * to their new values along the middle strip
- * doesn't set the top or bottom rows
- * This assumes appBackUpScreen contains their current values
+ * Based on the values in neighbor_matrix_strip, updates the cells in appBackUpScreen
+ * along the middle strip
+ *
+ * The only pixels set are those that correspond to elements in neighbor_matrix
+ * within the rectangle bounded by 0, x_end, y_start, y_end
+ * (start values inclusive, end values exclusive).
+ *
+ * Assumes that appBackUpScreen contains the current values of each cell.
  */
-void load_neighbor_matrix_strip(int origin_y)
+void load_neighbor_matrix_strip()
 {
     unsigned char *byte
-        = appBackUpScreen + (origin_y+1) * SCREEN_WIDTH_BYTES;
+        = appBackUpScreen + (STRIP_TOP+1) * SCREEN_WIDTH_BYTES;
     unsigned char mask = 0x80;
 
     unsigned char *start_row = byte;
@@ -270,8 +276,6 @@ void load_neighbor_matrix_strip(int origin_y)
         mask = 0x80;
     }
 }
-
-#define STRIP_TOP 28
 
 /*
  * Advances the game by one step
@@ -331,11 +335,12 @@ void take_step()
     }
 
     /* finally the strip in the middle */
-    generate_neighbor_matrix_strip(STRIP_TOP);
-    load_neighbor_matrix_strip(STRIP_TOP);
+    generate_neighbor_matrix_strip();
+    load_neighbor_matrix_strip();
 
-    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
-    FastCopy();
+    /* memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE); */
+    /* FastCopy(); */
+    DoubleBufferFlip();
 }
 
 enum State {RUNNING, PAUSED, DONE};
@@ -351,7 +356,7 @@ int main()
 
     memset(saveSScreen, 0, BUFFER_SIZE);
     memcpy(appBackUpScreen, plotSScreen, BUFFER_SIZE);
-    FastCopy();
+    DoubleBufferFlip();
 
     while (state != DONE) {
         sk = GetCSC();
