@@ -9,18 +9,6 @@
  * Code by Scott Morton 2016
  */
 
-#define SCREEN_WIDTH_BYTES 12
-
-void assert(int cond, const char *err)
-{
-    if (!cond) {
-        penRow = 0;
-        penCol = 0;
-        VPutS(err);
-        /* pause so I can actually see the error */
-        GetKey();
-    }
-}
 
 /*
  * sets the nth bit of byte to val (leftmost bit is 0)
@@ -51,6 +39,38 @@ bool get_bit(unsigned char *byte, int n)
     return *byte & mask;
 }
 
+/*
+ * EXPLANATION OF ALGORITHM:
+ * The basic idea is as follows: have a matrix with an element for each pixel.
+ * That element is the number of live neighbor cells that pixel has.
+ * To advance a step, iterate over all the pixels, and for each live one,
+ * increment the matrix element for each of its neighbors. Then, to update
+ * the board, check the matrix for each pixel to see how many live neighbors
+ * it has, and therefore what should happen to it.
+ *
+ * The TI84+ doesn't have enough RAM available for this matrix. It would
+ * require a byte for every pixel, which comes out to 6144 bytes. What we have
+ * is two areas of contiguous memory, each containing 768 bytes, or one bit
+ * per pixel. One of these blocks (appBackUpScreen) will be used to store the
+ * state of the new board as it is constructed. The other (plotSScreen) is
+ * used as the matrix described above, except it only contains data for a
+ * portion of the screen.
+ *
+ * As a result, the computation is performed in parts. The screen is split
+ * into 9 segments: four 30x25 pixel rectangular blocks along the top,
+ * four blocks along the bottom, and a long 8x96 strip along the middle.
+ * Since the new state of a cell only depends on the cells near it, we can
+ * compute the * new board state one section at a time.
+ *
+ * The sections overlap, so that for most pixels, there is a section
+ * containing both it and all of its neighbors. The exception are pixels on
+ * the vertical edges in between two blocks. The overlap between two blocks
+ * is only one column of pixels, so for this pixels, it is necessary
+ * to pass off some information between the two blocks.
+ */
+
+#define SCREEN_WIDTH_BYTES 12
+
 #define BLOCK_WIDTH 25
 #define BLOCK_HEIGHT 30
 
@@ -75,12 +95,14 @@ void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column
     unsigned char *byte
         = plotSScreen + origin_y*SCREEN_WIDTH_BYTES + origin_x / 8;
     int bit = origin_x % 8;
+    unsigned char mask = 0x80 >> (origin_x % 8);
 
     /*
      *  these variables serve as markers
      */
     unsigned char *start_row = byte;
     int start_bit = bit;
+    unsigned char start_mask = mask;
 
     /* iteration vars */
     int row;
@@ -90,7 +112,7 @@ void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column
 
     for (row = 0; row < BLOCK_HEIGHT; row++) {
         for (col = 0; col < BLOCK_WIDTH; col++) {
-            if (get_bit(byte, bit)) {
+            if (*byte & mask) {
                 if (col < BLOCK_WIDTH - 1 || complete_final_column) {
                     i = (row > 0) ? row-1 : row;
                     for (; i <= row+1 && i < BLOCK_HEIGHT; i++) {
@@ -110,9 +132,19 @@ void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column
                 }
             }
             bit++;
-            if (bit == 8) {
+            mask >>= 1;
+            if (!mask) {
                 bit = 0;
+                mask = 0x80;
                 byte++;
+                if (!byte) {
+                    byte++;
+                    /* no need to bother with blank bytes */
+                    while (!byte && col < BLOCK_WIDTH - 1) {
+                        byte++;
+                        col++;
+                    }
+                }
             }
         }
         start_row = start_row + SCREEN_WIDTH_BYTES;
@@ -321,30 +353,42 @@ void take_step()
     FastCopy();
 }
 
+enum State {RUNNING, PAUSED, DONE};
+
 int main()
 {
+    unsigned char sk;
     int i;
-    unsigned char *test_byte = appBackUpScreen + 20*SCREEN_WIDTH_BYTES;
+
+    enum State state = PAUSED;
 
     DisableAPD();
 
     memset(saveSScreen, 0, BUFFER_SIZE);
-    /* memset(appBackUpScreen, 0, BUFFER_SIZE); */
-    /* set_bit(test_byte, 6, true); */
-    /* set_bit(test_byte, 7, true); */
-    /* set_bit(test_byte+1, 0, true); */
-    /* memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE); */
     memcpy(appBackUpScreen, plotSScreen, BUFFER_SIZE);
     FastCopy();
 
-    GetKey();
 
-    for (i = 0; i < 30; i++) {
-        take_step();
+    while (state != DONE) {
+        sk = GetCSC();
+        switch (state) {
+        case RUNNING:
+            if (sk == skEnter)
+                state = PAUSED;
+            take_step();
+            break;
+        case PAUSED:
+            if (sk == skAdd)
+                state = RUNNING;
+            else if (sk == skSub)
+                take_step();
+            else if (sk == skClear)
+                state = DONE;
+            break;
+        }
     }
 
-    GetKey();
-
+    curRow = 0;
     ClrLCDFull();
 
     EnableAPD();
