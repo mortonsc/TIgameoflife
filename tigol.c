@@ -11,35 +11,6 @@
 
 
 /*
- * sets the nth bit of byte to val (leftmost bit is 0)
- */
-void set_bit(unsigned char *byte, int n, bool val)
-{
-
-    /* ex. if n = 3, mask is 0010 0000b */
-    unsigned char mask = 0x80 >> n;
-
-    if (val) {
-        /* set the nth bit to 1, without affecting the others */
-        *byte |= mask;
-    } else {
-        /* set the nth bit to 0, without affecting the others */
-        *byte &= ~mask;
-    }
-}
-
-/*
- *  returns the value of the nth bit of block (leftmost bit is 0)
- */
-bool get_bit(unsigned char *byte, int n)
-{
-    /* ex. if n = 3, mask is 0010 0000b */
-    unsigned char mask = 0x80 >> n;
-
-    return *byte & mask;
-}
-
-/*
  * EXPLANATION OF ALGORITHM:
  * The basic idea is as follows: have a matrix with an element for each pixel.
  * That element is the number of live neighbor cells that pixel has.
@@ -251,7 +222,7 @@ void load_neighbor_matrix_strip(int origin_y)
 {
     unsigned char *byte
         = appBackUpScreen + (origin_y+1) * SCREEN_WIDTH_BYTES;
-    int bit = 0;
+    unsigned char mask = 0x80;
 
     unsigned char *start_row = byte;
 
@@ -264,20 +235,20 @@ void load_neighbor_matrix_strip(int origin_y)
     for (row = 1; row < STRIP_HEIGHT-1; row++) {
         for (col = 0; col < STRIP_WIDTH; col++) {
             num_neighbors = neighbor_matrix_strip[row][col];
-            if (num_neighbors < 2 || num_neighbors > 3)
-                set_bit(byte, bit, false);
+            if ((*byte & mask) && (num_neighbors < 2 || num_neighbors > 3))
+                *byte ^= mask;
             else if (num_neighbors == 3)
-                set_bit(byte, bit, true);
+                *byte |= mask;
 
-            bit++;
-            if (bit == 8) {
-                bit = 0;
+            mask >>= 1;
+            if (!mask) {
+                mask = 0x80;
                 byte++;
             }
         }
         start_row = start_row + SCREEN_WIDTH_BYTES;
         byte = start_row;
-        bit = 0;
+        mask = 0x80;
     }
 }
 
