@@ -1,6 +1,8 @@
 # TIgameoflife
-John Conway's Game of a life for TI-83+ series calculators.
+
 ![screenshot](/screenshots/screenshot000.gif)
+
+John Conway's Game of a life for TI-83+ series calculators.
 
 ## Compilation
 The source code for this program is hosted on [github](https://github.com/mortonsc/TIgameoflife "mortonsc/TIgameoflife").
@@ -20,9 +22,7 @@ To compile:
 That's it!
 
 ### Windows
-All the required software is available for Windows, but I haven't put together a compile script.
-You'll have to either download a Windows port of make, and follow the Linux instructions,
-or translate the Makefile to a batch script.
+All the required software is available for Windows, so it should be possible to compile.
 
 ## Installation
 Currently the only way to obtain an executable is to follow the compilation process above.
