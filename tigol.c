@@ -69,13 +69,8 @@ __at 0x86EC unsigned char neighbor_matrix_strip[STRIP_HEIGHT][STRIP_WIDTH];
 /*
  * Fills neighbor_matrix with the number of live neighbors of each pixel in the
  * BLOCK_HEIGHT x BLOCK_WIDTH rectangle with upper-left corner (origin_y, origin_x)
- *
- * If we had unlimited memory, we would make a new matrix of how many
- * live neighbors each cell has. We don't have enough memory for that,
- * but we can do it in steps.
- * This way requires both appBackUpScreen and saveSScreen
  */
-void fill_neighbor_matrix(int origin_y, int origin_x)
+void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column)
 {
     unsigned char *byte
         = plotSScreen + origin_y*SCREEN_WIDTH_BYTES + origin_x / 8;
@@ -96,15 +91,23 @@ void fill_neighbor_matrix(int origin_y, int origin_x)
     for (row = 0; row < BLOCK_HEIGHT; row++) {
         for (col = 0; col < BLOCK_WIDTH; col++) {
             if (get_bit(byte, bit)) {
-                i = (row > 0) ? row-1 : row;
-                for (; i <= row+1 && i < BLOCK_HEIGHT; i++) {
-                    j = (col > 0) ? col-1 : col;
-                    for (; j <= col+1 && j < BLOCK_WIDTH; j++) {
-                        neighbor_matrix[i][j]++;
+                if (col < BLOCK_WIDTH - 1 || complete_final_column) {
+                    i = (row > 0) ? row-1 : row;
+                    for (; i <= row+1 && i < BLOCK_HEIGHT; i++) {
+                        j = (col > 0) ? col-1 : col;
+                        for (; j <= col+1 && j < BLOCK_WIDTH; j++) {
+                            neighbor_matrix[i][j]++;
+                        }
                     }
+                    /* the above loop counts a cell as its own neighbor */
+                    neighbor_matrix[row][col]--;
+                } else {
+                    /* only update values on the column to the left */
+                    i = (row > 0) ? row-1 : row;
+                    j = col - 1;
+                    for (; i <= row+1 && i < BLOCK_HEIGHT; i++)
+                        neighbor_matrix[i][j]++;
                 }
-                /* the above loop counts a cell as its own neighbor */
-                neighbor_matrix[row][col]--;
             }
             bit++;
             if (bit == 8) {
@@ -277,7 +280,7 @@ void take_step()
         /* first three blocks */
         while (block < 3) {
             /* update this part of the screen */
-            fill_neighbor_matrix(origin_y, origin_x);
+            fill_neighbor_matrix(origin_y, origin_x, false);
             load_neighbor_matrix(origin_y, origin_x,
                     y_start, y_end, 0, BLOCK_WIDTH - 1);
 
@@ -295,7 +298,7 @@ void take_step()
             block++;
         }
         /* final block */
-        fill_neighbor_matrix(origin_y, origin_x);
+        fill_neighbor_matrix(origin_y, origin_x, true);
         load_neighbor_matrix(origin_y, origin_x,
                 y_start, y_end, 0, BLOCK_WIDTH);
         memset(saveSScreen, 0, BUFFER_SIZE);
