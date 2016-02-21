@@ -94,14 +94,12 @@ void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column
 {
     unsigned char *byte
         = plotSScreen + origin_y*SCREEN_WIDTH_BYTES + origin_x / 8;
-    int bit = origin_x % 8;
     unsigned char mask = 0x80 >> (origin_x % 8);
 
     /*
      *  these variables serve as markers
      */
     unsigned char *start_row = byte;
-    int start_bit = bit;
     unsigned char start_mask = mask;
 
     /* iteration vars */
@@ -131,25 +129,20 @@ void fill_neighbor_matrix(int origin_y, int origin_x, bool complete_final_column
                         neighbor_matrix[i][j]++;
                 }
             }
-            bit++;
             mask >>= 1;
             if (!mask) {
-                bit = 0;
                 mask = 0x80;
                 byte++;
-                if (!byte) {
+                /* no need to bother with blank bytes */
+                while (!(*byte) && col < BLOCK_WIDTH - 1) {
                     byte++;
-                    /* no need to bother with blank bytes */
-                    while (!byte && col < BLOCK_WIDTH - 1) {
-                        byte++;
-                        col++;
-                    }
+                    col += 8;
                 }
             }
         }
         start_row = start_row + SCREEN_WIDTH_BYTES;
         byte = start_row;
-        bit = start_bit;
+        mask = start_mask;
     }
 }
 
