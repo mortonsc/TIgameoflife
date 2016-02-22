@@ -45,16 +45,15 @@
 #define STRIP_WIDTH 96
 
 /*
- * matrices located in saveSScreen
- * it would be more honest to cast saveSScreen to arrays
+ * matrix located in appBackUpScreen
+ * it would be more honest to cast appBackUpScreen to an array
  * but I couldn't figure out how to do that
  */
-__at 0x86EC unsigned char neighbor_matrix_strip[STRIP_HEIGHT][STRIP_WIDTH];
+__at 0x9872 unsigned char neighbor_matrix_strip[STRIP_HEIGHT][STRIP_WIDTH];
 
 /*
  * Fills neighbor_matrix_strip with the number of neighbors of each cell
  * along the middle strip.
- *
  */
 void generate_neighbor_matrix_strip(int top_row, bool complete_last_row)
 {
@@ -126,11 +125,10 @@ void generate_neighbor_matrix_strip(int top_row, bool complete_last_row)
  * within the rectangle bounded by 0, x_end, y_start, y_end
  * (start values inclusive, end values exclusive).
  *
- * Assumes that appBackUpScreen contains the current values of each cell.
  */
 void load_neighbor_matrix_strip(int top_row, bool load_last_row)
 {
-    unsigned char *byte = appBackUpScreen + top_row*SCREEN_WIDTH_BYTES;
+    unsigned char *byte = plotSScreen + top_row*SCREEN_WIDTH_BYTES;
     unsigned char mask = 0x80;
 
     int end_row = load_last_row ? STRIP_HEIGHT : STRIP_HEIGHT - 1;
@@ -186,19 +184,8 @@ void take_step()
 
     generate_neighbor_matrix_strip(top_row, true);
     load_neighbor_matrix_strip(top_row, true);
-    memset(saveSScreen, 0, BUFFER_SIZE);
+    memset(appBackUpScreen, 0, BUFFER_SIZE);
 
-    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
-    FastCopy();
-}
-
-void take_step_top_only()
-{
-    generate_neighbor_matrix_strip(0, true);
-    load_neighbor_matrix_strip(0, true);
-    memset(saveSScreen, 0, BUFFER_SIZE);
-
-    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
     FastCopy();
 }
 
@@ -210,11 +197,7 @@ int main()
 
     enum State state = PAUSED;
 
-    /* disable automatic power down, it interferes with saveSScreen */
-    DisableAPD();
-
-    memset(saveSScreen, 0, BUFFER_SIZE);
-    memcpy(appBackUpScreen, plotSScreen, BUFFER_SIZE);
+    memset(appBackUpScreen, 0, BUFFER_SIZE);
     FastCopy();
 
     while (state != DONE) {
@@ -240,8 +223,6 @@ int main()
 
     ClrLCDFull();
     curRow = 0;
-
-    EnableAPD();
 
     return 0;
 }
