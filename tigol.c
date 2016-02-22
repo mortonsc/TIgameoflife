@@ -85,24 +85,25 @@ void generate_neighbor_matrix(int top_row, bool complete_last_row)
         }
     }
 
+    if (complete_last_row)
+        return;
+
     /* partial final row */
-    if (!complete_last_row) {
-        i = STRIP_HEIGHT-2;
-        for (col = 0; col < STRIP_WIDTH; col++) {
-            if (*byte & mask) {
-                j = (col > 0) ? col-1 : col;
-                for (; j <= col+1 && j < STRIP_WIDTH; j++)
-                    neighbor_matrix[i][j]++;
-            }
-            mask >>= 1;
-            if (!mask) {
-                mask = 0x80;
+    i = STRIP_HEIGHT-2;
+    for (col = 0; col < STRIP_WIDTH; col++) {
+        if (*byte & mask) {
+            j = (col > 0) ? col-1 : col;
+            for (; j <= col+1 && j < STRIP_WIDTH; j++)
+                neighbor_matrix[i][j]++;
+        }
+        mask >>= 1;
+        if (!mask) {
+            mask = 0x80;
+            byte++;
+            /* skip over empty bytes */
+            while (!(*byte) && col < STRIP_WIDTH-1) {
                 byte++;
-                /* skip over empty bytes */
-                while (!(*byte) && col < STRIP_WIDTH-1) {
-                    byte++;
-                    col += 8;
-                }
+                col += 8;
             }
         }
     }
