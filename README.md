@@ -26,7 +26,7 @@ All the required software is available for Windows, so it should be possible to 
 
 ## Installation
 Currently the only way to obtain an executable is to follow the compilation process above.
-Once you've done that, upload `tigol.8xp` to your favorite emulator.
+Once you've done that, upload `game_of_life.8xp` to your favorite emulator.
 This project is still in development, so I wouldn't recommend running it on an actual calculator.
 
 ## How to Play
