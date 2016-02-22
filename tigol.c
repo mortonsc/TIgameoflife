@@ -141,7 +141,7 @@ void load_neighbor_matrix_strip(int top_row, bool load_last_row)
 
     int num_neighbors;
 
-    for (row = 1; row < end_row; row++) {
+    for (row = 0; row < end_row; row++) {
         for (col = 0; col < STRIP_WIDTH; col++) {
             num_neighbors = neighbor_matrix_strip[row][col];
             if ((*byte & mask) && (num_neighbors < 2 || num_neighbors > 3))
@@ -186,6 +186,7 @@ void take_step()
 
     generate_neighbor_matrix_strip(top_row, true);
     load_neighbor_matrix_strip(top_row, true);
+    memset(saveSScreen, 0, BUFFER_SIZE);
 
     memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
     FastCopy();
