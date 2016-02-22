@@ -8,7 +8,7 @@ If you want to write your own C programs on a calculator, this project provides 
 ## Supported Calculators
 This program is tested on a TI-84+.
 The 83+, 83+SE, 84+, and 84+SE are all compatible on an assembly level, so it should work on any of them.
-It will run significantly slower on the standard TI-83+, which has a slower processor.
+However, it will run significantly slower on the standard TI-83+, whose CPU is not as fast.
 
 ## Compilation
 The source code for this program is hosted on [github](https://github.com/mortonsc/TIgameoflife "mortonsc/TIgameoflife").
