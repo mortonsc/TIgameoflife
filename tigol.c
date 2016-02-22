@@ -18,25 +18,11 @@
  * the board, check the matrix for each pixel to see how many live neighbors
  * it has, and therefore what should happen to it.
  *
- * The TI84+ doesn't have enough RAM available for this matrix. It would
- * require a byte for every pixel, which comes out to 6144 bytes. What we have
- * is two areas of contiguous memory, each containing 768 bytes, or one bit
- * per pixel. One of these blocks (appBackUpScreen) will be used to store the
- * state of the new board as it is constructed. The other (plotSScreen) is
- * used as the matrix described above, except it only contains data for a
- * portion of the screen.
+ * The TI84+ doesn't have enough RAM available for this matrix. So instead,
+ * we divide the screen up into 9 horizontal strips, and generate the matrix
+ * for each of them, one at a time, so we can reuse the same memory for each
+ * matrix.
  *
- * As a result, the computation is performed in parts. The screen is split
- * into 9 segments: four 30x25 pixel rectangular blocks along the top,
- * four blocks along the bottom, and a long 8x96 strip along the middle.
- * Since the new state of a cell only depends on the cells near it, we can
- * compute the * new board state one section at a time.
- *
- * The sections overlap, so that for most pixels, there is a section
- * containing both it and all of its neighbors. The exception are pixels on
- * the vertical edges in between two blocks. The overlap between two blocks
- * is only one column of pixels, so for this pixels, it is necessary
- * to pass off some information between the two blocks.
  */
 
 #define SCREEN_WIDTH_BYTES 12
@@ -49,13 +35,18 @@
  * it would be more honest to cast appBackUpScreen to an array
  * but I couldn't figure out how to do that
  */
-__at 0x9872 unsigned char neighbor_matrix_strip[STRIP_HEIGHT][STRIP_WIDTH];
+__at 0x9872 unsigned char neighbor_matrix[STRIP_HEIGHT][STRIP_WIDTH];
 
 /*
- * Fills neighbor_matrix_strip with the number of neighbors of each cell
- * along the middle strip.
+ * Fills neighbor matrix with the number of live neighbors of each pixel
+ * in the strip starting with top_row
+ *
+ * If complete_last_row is false, does not completely generate the last row
+ * of the matrix. This is done in such a way that the last row can then be
+ * passed as the first row to the next strip, and it will have the correct
+ * final result.
  */
-void generate_neighbor_matrix_strip(int top_row, bool complete_last_row)
+void generate_neighbor_matrix(int top_row, bool complete_last_row)
 {
     unsigned char *byte = plotSScreen + top_row*SCREEN_WIDTH_BYTES;
     unsigned char mask = 0x80;
@@ -75,11 +66,11 @@ void generate_neighbor_matrix_strip(int top_row, bool complete_last_row)
                 for (; i <= row+1 && i < STRIP_HEIGHT; i++) {
                     j = (col > 0) ? col-1 : col;
                     for (; j <= col+1 && j < STRIP_WIDTH; j++) {
-                        neighbor_matrix_strip[i][j]++;
+                        neighbor_matrix[i][j]++;
                     }
                 }
                 /* the above loop counts a cell as its own neighbor */
-                neighbor_matrix_strip[row][col]--;
+                neighbor_matrix[row][col]--;
             }
             mask >>= 1;
             if (!mask) {
@@ -101,7 +92,7 @@ void generate_neighbor_matrix_strip(int top_row, bool complete_last_row)
             if (*byte & mask) {
                 j = (col > 0) ? col-1 : col;
                 for (; j <= col+1 && j < STRIP_WIDTH; j++)
-                    neighbor_matrix_strip[i][j]++;
+                    neighbor_matrix[i][j]++;
             }
             mask >>= 1;
             if (!mask) {
@@ -118,15 +109,12 @@ void generate_neighbor_matrix_strip(int top_row, bool complete_last_row)
 }
 
 /*
- * Based on the values in neighbor_matrix_strip, updates the cells in appBackUpScreen
- * along the middle strip
+ * Updates the strip of plotSScreen with the given top row according to the
+ * contents of the neighbor_matrix.
  *
- * The only pixels set are those that correspond to elements in neighbor_matrix
- * within the rectangle bounded by 0, x_end, y_start, y_end
- * (start values inclusive, end values exclusive).
- *
+ * If load_last_row is false, does not update the last row.
  */
-void load_neighbor_matrix_strip(int top_row, bool load_last_row)
+void load_neighbor_matrix(int top_row, bool load_last_row)
 {
     unsigned char *byte = plotSScreen + top_row*SCREEN_WIDTH_BYTES;
     unsigned char mask = 0x80;
@@ -141,7 +129,7 @@ void load_neighbor_matrix_strip(int top_row, bool load_last_row)
 
     for (row = 0; row < end_row; row++) {
         for (col = 0; col < STRIP_WIDTH; col++) {
-            num_neighbors = neighbor_matrix_strip[row][col];
+            num_neighbors = neighbor_matrix[row][col];
             if ((*byte & mask) && (num_neighbors < 2 || num_neighbors > 3))
                 *byte ^= mask;
             else if (num_neighbors == 3)
@@ -170,23 +158,23 @@ void take_step()
     int j;
 
     for (top_row = 0; top_row < end_row; top_row += STRIP_HEIGHT-1) {
-        generate_neighbor_matrix_strip(top_row, false);
-        load_neighbor_matrix_strip(top_row, false);
+        generate_neighbor_matrix(top_row, false);
+        load_neighbor_matrix(top_row, false);
 
         for (j = 0; j < STRIP_WIDTH; j++) {
-            neighbor_matrix_strip[0][j]
-                = neighbor_matrix_strip[STRIP_HEIGHT-1][j];
+            neighbor_matrix[0][j]
+                = neighbor_matrix[STRIP_HEIGHT-1][j];
         }
         for (i = 1; i < STRIP_HEIGHT; i++)
             for (j = 0; j < STRIP_WIDTH; j++)
-                neighbor_matrix_strip[i][j] = 0;
+                neighbor_matrix[i][j] = 0;
     }
 
-    generate_neighbor_matrix_strip(top_row, true);
-    load_neighbor_matrix_strip(top_row, true);
-    memset(appBackUpScreen, 0, BUFFER_SIZE);
+    generate_neighbor_matrix(top_row, true);
+    load_neighbor_matrix(top_row, true);
 
     FastCopy();
+    memset(appBackUpScreen, 0, BUFFER_SIZE);
 }
 
 enum State {RUNNING, PAUSED, DONE};
