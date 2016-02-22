@@ -1,6 +1,6 @@
 # TIgameoflife
 
-![screenshot](/screenshots/screenshot000.gif)
+![screenshot](/screenshots/gameplay.gif)
 
 A simple implementation in C of [John Conway's Game of Life](https://en.wikipedia.org/wiki/Conway's_Game_of_Life) for TI-83+ series calculators.
 If you want to write your own C programs on a calculator, this project provides a helpful framework.
