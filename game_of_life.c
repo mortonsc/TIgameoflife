@@ -189,6 +189,8 @@ int main()
 
     enum State state = PAUSED;
 
+    Enable15MHz();
+
     memset(appBackUpScreen, 0, BUFFER_SIZE);
     FastCopy();
 
