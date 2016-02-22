@@ -165,13 +165,13 @@ void take_step()
 {
     /* which block we're on */
     int top_row;
-    int end_row = STRIP_HEIGHT*8;
+    int end_row = 8 * (STRIP_HEIGHT - 1);
 
     /* iteration vars */
     int i;
     int j;
 
-    for (top_row = 0; top_row < end_row; top_row+=STRIP_HEIGHT) {
+    for (top_row = 0; top_row < end_row; top_row += STRIP_HEIGHT-1) {
         generate_neighbor_matrix_strip(top_row, false);
         load_neighbor_matrix_strip(top_row, false);
 
@@ -186,6 +186,16 @@ void take_step()
 
     generate_neighbor_matrix_strip(top_row, true);
     load_neighbor_matrix_strip(top_row, true);
+    memset(saveSScreen, 0, BUFFER_SIZE);
+
+    memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
+    FastCopy();
+}
+
+void take_step_top_only()
+{
+    generate_neighbor_matrix_strip(0, true);
+    load_neighbor_matrix_strip(0, true);
     memset(saveSScreen, 0, BUFFER_SIZE);
 
     memcpy(plotSScreen, appBackUpScreen, BUFFER_SIZE);
