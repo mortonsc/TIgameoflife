@@ -152,9 +152,7 @@ void load_neighbor_matrix_block(int origin_y, int origin_x,
 
     unsigned char mask = 0x80 >> (origin_x % 8);
 
-    unsigned char *start_row = byte;
     unsigned char start_mask = mask;
-
 
     /* iteration vars */
     int row;
@@ -176,8 +174,7 @@ void load_neighbor_matrix_block(int origin_y, int origin_x,
                 byte++;
             }
         }
-        start_row += SCREEN_WIDTH_BYTES;
-        byte = start_row;
+        byte += SCREEN_WIDTH_BYTES - BLOCK_WIDTH/8;
         mask = start_mask;
     }
 }
@@ -194,8 +191,6 @@ void generate_neighbor_matrix_strip()
     unsigned char *byte
         = plotSScreen + STRIP_TOP*SCREEN_WIDTH_BYTES;
     unsigned char mask = 0x80;
-
-    unsigned char *start_row = byte;
 
     /* iteration vars */
     int row;
@@ -220,15 +215,13 @@ void generate_neighbor_matrix_strip()
             if (!mask) {
                 mask = 0x80;
                 byte++;
-                while (!(*byte) && col < STRIP_WIDTH) {
+                /* skip over empty bytes */
+                while (!(*byte) && col < STRIP_WIDTH-1) {
                     byte++;
                     col += 8;
                 }
             }
         }
-        start_row += SCREEN_WIDTH_BYTES;
-        byte = start_row;
-        mask = 0x80;
     }
 }
 
@@ -247,8 +240,6 @@ void load_neighbor_matrix_strip()
     unsigned char *byte
         = appBackUpScreen + (STRIP_TOP+1) * SCREEN_WIDTH_BYTES;
     unsigned char mask = 0x80;
-
-    unsigned char *start_row = byte;
 
     /* iteration vars */
     int row;
@@ -270,9 +261,6 @@ void load_neighbor_matrix_strip()
                 byte++;
             }
         }
-        start_row += SCREEN_WIDTH_BYTES;
-        byte = start_row;
-        mask = 0x80;
     }
 }
 
