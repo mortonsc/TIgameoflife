@@ -28,8 +28,6 @@ All the required software is available for Windows, so it should be possible to 
 Currently the only way to obtain an executable is to follow the compilation process above.
 Once you've done that, upload `tigol.8xp` to your favorite emulator.
 This project is still in development, so I wouldn't recommend running it on an actual calculator.
-If you do, be warned that the program temporarily disables automatic power down,
-so if you leave your calculator unattended while it is running it will keep going till it runs out of battery.
 
 ## How to Play
 The program is called CONWAY on the calculator. To run, use the `Asm(` command (found in the catalog):
