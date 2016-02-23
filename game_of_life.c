@@ -215,8 +215,8 @@ int main()
         }
     }
 
-    ClrLCDFull();
-    curRow = 0;
+    /* The OS seems to do this anyways, but it's good to be safe */
+    Disable15MHz();
 
     return 0;
 }
