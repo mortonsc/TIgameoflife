@@ -56,6 +56,7 @@ before the game pauses.
 ## Planned Features
 This is a list of features I plan to add:
 * About/help screen
+* Wrapping around edges
 * Generation number tracking
 * Ability to load/save to the calc's picture variables
 
