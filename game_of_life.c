@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <string.h>
-#include "inc/ti83plus.h"
-#include "inc/fastcopy.h"
+#include "lib/c_ti83p.h"
 
 
 /*
