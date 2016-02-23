@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <string.h>
-#include "inc/ti84plus.h"
+#include "inc/ti83plus.h"
 #include "inc/fastcopy.h"
 
 
@@ -189,22 +189,22 @@ int main()
 
     enum State state = PAUSED;
 
-    Enable15MHz();
+    CEnable15MHz();
 
     memset(appBackUpScreen, 0, BUFFER_SIZE);
     FastCopy();
 
     while (state != DONE) {
-        sk = GetCSC();
+        sk = CGetCSC();
         switch (state) {
         case RUNNING:
-            RunIndicatorOff();
+            CRunIndicatorOff();
             if (sk == skEnter)
                 state = PAUSED;
             take_step();
             break;
         case PAUSED:
-            RunIndicatorOn();
+            CRunIndicatorOn();
             if (sk == skAdd)
                 state = RUNNING;
             else if (sk == skSub)
@@ -216,7 +216,7 @@ int main()
     }
 
     /* The OS seems to do this anyways, but it's good to be safe */
-    Disable15MHz();
+    CDisable15MHz();
 
     return 0;
 }
