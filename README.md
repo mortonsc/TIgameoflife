@@ -7,34 +7,35 @@ If you want to write your own C programs on a calculator, this project provides 
 
 ## Supported Calculators
 This program is tested on a TI-84+.
-The 83+, 83+SE, 84+, and 84+SE are all compatible on an assembly level, so it should work on any of them.
-However, it will run significantly slower on the standard TI-83+, whose CPU is not as fast.
+It should be compatible with the TI-83+, TI-83+SE, TI-84+, and TI-84+SE.
+However, it will run noticeably slower on the TI-83+, which has a slower CPU.
 
 ## Compilation
-The source code for this program is hosted on [github](https://github.com/mortonsc/TIgameoflife "mortonsc/TIgameoflife").
+The source code for this program is hosted on [Github](https://github.com/mortonsc/TIgameoflife "mortonsc/TIgameoflife").
 To compile the program, you will need the following software:
 * [SDCC](http://sdcc.sourceforge.net/ "SDCC") (Small Device C Compiler): compiler/assembler/linker
 * [hex2bin](http://hex2bin.sourceforge.net/ "hex2bin"): converts output from SDCC to binary file
 * [binpac8x.py](http://www.ticalc.org/archives/files/fileinfo/429/42915.html "binpac8x"): packages binary file into executable for the calculator
 
-The included Makefile assumes all these programs are in your system path.
+The makefile assumes all these programs are in your system path.
 On Linux, it may also be necessary to change the permissions of binpac8x.py so you can execute it: `chmod +x binpac8x.py`.
 
 ### Linux
-To compile:
+To download and compile the source: open a terminal and navigate to the directory you want to download the source to.
+Then enter the commands:
 
     git clone https://github.com/mortonsc/TIgameoflife.git
     make
-That's it!
+That's it! The executable file is `game_of_life.8xp`.
 
 ### Windows
 All the required software is available for Windows, so it should be possible to compile, but I haven't tried.
 
 ## Installation
-Currently the only way to obtain an executable is to follow the compilation process above.
-Once you've done that, upload `game_of_life.8xp` to your favorite emulator, or, if you're particularly trusting,
+Currently the only official way to obtain an executable is to follow the compilation process above.
+Once you've done that, open `game_of_life.8xp` with your favorite emulator, or, if you're particularly trusting,
 upload it to your calculator with your favorite linking software.
-As far as I know the program is stable,
+As far as I know the program is safe,
 but bear in mind that running assembly programs on the calculator is inherently dangerous.
 
 ## How to Play
@@ -50,7 +51,7 @@ When the program starts, it is paused. There are 3 possible actions:
 * `-`: advances the game one step
 * `+`: starts the game running
 
-While the game is running, pressing `Enter` will pause it again. You will probably have to hold the button for a second
+While the game is running, pressing `Enter` will pause it again. You may have to hold the button for a second
 before the game pauses.
 
 ## Planned Features
@@ -72,7 +73,7 @@ If there's something you need, contact me and I'll see if I can't add it in.
 which copies the contents of a buffer to the LCD.
 
 In addition, the [makefile](Makefile) has all the correct flags for compiling/assembling with SDCC,
-and can be easily modified to work with your source files.
+and can be easily adapted to different source files.
 
 ## Contact
 You can contact me via email; my address is visible on my Github profile.
