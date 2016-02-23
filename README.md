@@ -3,7 +3,6 @@
 ![screenshot](/screenshots/gameplay.gif)
 
 A simple implementation in C of [John Conway's Game of Life](https://en.wikipedia.org/wiki/Conway's_Game_of_Life) for TI-83+ series calculators.
-If you want to write your own C programs on a calculator, this project provides a helpful framework.
 
 ## Supported Calculators
 This program is tested on a TI-84+.
@@ -24,7 +23,7 @@ On Linux, it may also be necessary to change the permissions of binpac8x.py so y
 To download and compile the source: open a terminal and navigate to the directory you want to download the source to.
 Then enter the commands:
 
-    git clone https://github.com/mortonsc/TIgameoflife.git
+    git clone --recursive https://github.com/mortonsc/TIgameoflife.git
     make
 That's it! The executable file is `game_of_life.8xp`.
 
@@ -60,20 +59,6 @@ This is a list of features I plan to add:
 * Wrapping around edges
 * Generation number tracking
 * Ability to load/save to the calc's picture variables
-
-## Included Files
-If you want to write your own C program for the calculator,
-I recommend you avoid the pain I went through and use this project as a starting point.
-The `inc/` directory includes:
-* [tios_crt0.s](inc/tios_crt0.s): The crt0 (C RunTime 0) file appears at the very beginning of the compiled assembly program.
-It needs to be correct for the compiled program to be runnable on the calculator.
-* [ti84plus.h](inc/ti84plus.h): A header file containing C wrappers for various system calls and defines for keycodes and special characters. This is one is perpetually in development as I add support for more features.
-If there's something you need, contact me and I'll see if I can't add it in.
-* [fastcopy.h](inc/fastcopy.h): A C wrapper for the [fastcopy](http://wikiti.brandonw.net/index.php?title=Z80_Routines:Graphic:Fastcopy) assembly routine,
-which copies the contents of a buffer to the LCD.
-
-In addition, the [makefile](Makefile) has all the correct flags for compiling/assembling with SDCC,
-and can be easily adapted to different source files.
 
 ## Contact
 You can contact me via email; my address is visible on my Github profile.
