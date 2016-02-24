@@ -45,10 +45,14 @@ The program does not offer any way to edit the screen; the contents of your grap
 are used as the initial state. If you want to quickly create an interesting screen, you can use the `Draw->Text(` command
 to print text to the screen.
 
-When the program starts, it is paused. There are 3 possible actions:
+When the program starts, it is paused. There are 5 possible actions:
 * `Clear`: quits the program
 * `-`: advances the game one step
 * `+`: starts the game running
+* `Sto`+Num: Stores the contents of the screen to picture variable Num.
+Num is any of the numerical keys.  (as if you had entered `StoPic` Num)
+* `Ln`+Num: Loads the contents of picture variable Num to the screen.
+(as if you had entered `RecallPic` Num)
 
 While the game is running, pressing `Enter` will pause it again. You may have to hold the button for a second
 before the game pauses.
@@ -58,7 +62,6 @@ This is a list of features I plan to add:
 * About/help screen
 * Wrapping around edges
 * Generation number tracking
-* Ability to load/save to the calc's picture variables
 
 ## Contact
 You can contact me via email; my address is visible on my Github profile.

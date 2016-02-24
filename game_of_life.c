@@ -180,11 +180,46 @@ void take_step()
     memset(appBackUpScreen, 0, BUFFER_SIZE);
 }
 
+
+/*
+ * Polls the user for a picture number.
+ * Returns 0 if a non-numeric key is pressed.
+ */
+int get_pic_no()
+{
+    unsigned char key = CGetKey();
+    switch (key) {
+    case k0:
+        return 10;
+    case k1:
+        return 1;
+    case k2:
+        return 2;
+    case k3:
+        return 3;
+    case k4:
+        return 4;
+    case k5:
+        return 5;
+    case k6:
+        return 6;
+    case k7:
+        return 7;
+    case k8:
+        return 8;
+    case k9:
+        return 9;
+    default:
+        return 0;
+    }
+}
+
 enum State {RUNNING, PAUSED, DONE};
 
 int main()
 {
     unsigned char sk;
+    int pic_no;
 
     enum State state = PAUSED;
 
@@ -197,19 +232,36 @@ int main()
         sk = CGetCSC();
         switch (state) {
         case RUNNING:
-            CRunIndicatorOff();
-            if (sk == skEnter)
+            if (sk == skEnter) {
                 state = PAUSED;
+                CRunIndicatorOn();
+            }
             take_step();
             break;
         case PAUSED:
-            CRunIndicatorOn();
-            if (sk == skAdd)
+            if (sk == skAdd) {
                 state = RUNNING;
-            else if (sk == skSub)
+                CRunIndicatorOff();
+            } else if (sk == skSub) {
                 take_step();
-            else if (sk == skClear)
+            } else if (sk == skStore) {
+                /* store screen to pic */
+                pic_no = get_pic_no();
+                if (pic_no != 0)
+                    CStorePic(pic_no, plotSScreen);
+            } else if (sk == skLn) {
+                /* load a pic */
+                pic_no = get_pic_no();
+                if (pic_no != 0) {
+                    memcpy(plotSScreen, CRecallPic(pic_no), PIC_SIZE_BYTES);
+                    /* pic vars don't include the last row, so clear it */
+                    memset(plotSScreen + 63*SCREEN_WIDTH_BYTES,
+                            0, SCREEN_WIDTH_BYTES);
+                }
+                FastCopy();
+            } else if (sk == skClear) {
                 state = DONE;
+            }
             break;
         }
     }
