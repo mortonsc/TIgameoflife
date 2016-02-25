@@ -1,15 +1,22 @@
-#include <stdbool.h>
-#include <string.h>
-#include "lib/c_ti83p.h"
-
-
 /*
- * Copyright (c) 2016 Scott Morton
- * This is free software released under the MIT license.
- * For more information, see the LICENSE.txt file
- * which should be bundled with this source.
+ * An implementation of John Conway's Game of Life
+ * for TI-83+ series graphing calculators.
+ *
+ * Copyright (C) 2016 Scott Morton
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 /*
  * EXPLANATION OF ALGORITHM:
@@ -24,8 +31,11 @@
  * we divide the screen up into 9 horizontal strips, and generate the matrix
  * for each of them, one at a time, so we can reuse the same memory for each
  * matrix.
- *
  */
+
+#include <stdbool.h>
+#include <string.h>
+#include "lib/c_ti83p.h"
 
 #define SCREEN_WIDTH_BYTES 12
 
