@@ -4,7 +4,10 @@ LKFLAGS=--code-loc 0x9D9B --data-loc 0 --no-std-crt0
 EXEC=game_of_life
 LDIR=lib
 
-.PHONY: all clean
+# make all does not automatically recompile the library
+# if the library is updated, it is necessary to make lib
+
+.PHONY: all lib clean
 
 all: $(EXEC).8xp
 
@@ -14,14 +17,11 @@ $(EXEC).8xp: $(EXEC).bin
 $(EXEC).bin: $(EXEC).ihx
 	hex2bin $(EXEC).ihx
 
-$(EXEC).ihx: $(EXEC).c $(LDIR)/tios_crt0.rel $(LDIR)/c_ti83p.lib
+$(EXEC).ihx: $(EXEC).c
 	$(CC) $(CFLAGS) $(LKFLAGS) $(LDIR)/tios_crt0.rel $(LDIR)/c_ti83p.lib $(EXEC).c
 
-$(LDIR)/tios_crt0.rel:
-	$(MAKE) -C $(LDIR) tios_crt0.rel
-
-$(LDIR)/c_ti83p.lib:
-	$(MAKE) -C $(LDIR) c_ti83p.lib
+lib:
+	make -C $(LDIR)
 
 clean:
 	rm -f *.8xp *.bin *.ihx *.asm *.lst *.sym *.lk *.map *.noi *.rel

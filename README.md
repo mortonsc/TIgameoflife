@@ -24,6 +24,7 @@ To download and compile the source: open a terminal and navigate to the director
 Then enter the commands:
 
     git clone --recursive https://github.com/mortonsc/TIgameoflife.git
+    make lib
     make
 That's it! The executable file is `game_of_life.8xp`.
 
