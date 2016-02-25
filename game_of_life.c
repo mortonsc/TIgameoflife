@@ -258,7 +258,7 @@ int main()
                 /* store screen to pic */
                 pic_no = get_pic_no();
                 if (pic_no != 0)
-                    CStorePic(pic_no, plotSScreen);
+                    memcpy(CCreatePic(pic_no), plotSScreen, PIC_SIZE_BYTES);
             } else if (sk == skLn) {
                 /* load a pic */
                 pic_no = get_pic_no();
