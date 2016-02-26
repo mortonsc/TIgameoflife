@@ -17,7 +17,7 @@ $(EXEC).8xp: $(EXEC).bin
 $(EXEC).bin: $(EXEC).ihx
 	hex2bin $(EXEC).ihx
 
-$(EXEC).ihx: $(EXEC).c
+$(EXEC).ihx: $(EXEC).c lib
 	$(CC) $(CFLAGS) $(LKFLAGS) $(LDIR)/tios_crt0.rel $(LDIR)/c_ti83p.lib $(EXEC).c
 
 lib:
