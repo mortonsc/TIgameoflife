@@ -51,7 +51,7 @@ When the program starts, it is paused. There are 5 possible actions:
 * `-`: advances the game one step
 * `+`: starts the game running
 * `Sto`+Num: Stores the contents of the screen to picture variable Num.
-Num is any of the numerical keys.  (as if you had entered `StoPic` Num)
+Num is any of the numerical keys.  (as if you had entered `StorePic` Num)
 * `Ln`+Num: Loads the contents of picture variable Num to the screen.
 (as if you had entered `RecallPic` Num)
 
