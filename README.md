@@ -13,7 +13,6 @@ However, it will run noticeably slower on the TI-83+, which has a slower CPU.
 The source code for this program is hosted on [Github](https://github.com/mortonsc/TIgameoflife "mortonsc/TIgameoflife").
 To compile the program, you will need the following software:
 * [SDCC](http://sdcc.sourceforge.net/ "SDCC") (Small Device C Compiler): compiler/assembler/linker
-* [hex2bin](http://hex2bin.sourceforge.net/ "hex2bin"): converts output from SDCC to binary file
 * [binpac8x.py](http://www.ticalc.org/archives/files/fileinfo/429/42915.html "binpac8x"): packages binary file into executable for the calculator
 
 The makefile assumes all these programs are in your system path.

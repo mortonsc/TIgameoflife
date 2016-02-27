@@ -15,7 +15,7 @@ $(EXEC).8xp: $(EXEC).bin
 	binpac8x.py -O conway $(EXEC).bin
 
 $(EXEC).bin: $(EXEC).ihx
-	hex2bin $(EXEC).ihx
+	sdobjcopy -Iihex -Obinary $(EXEC).ihx $(EXEC).bin
 
 $(EXEC).ihx: $(EXEC).c lib
 	$(CC) $(CFLAGS) $(LKFLAGS) $(LDIR)/tios_crt0.rel $(LDIR)/c_ti83p.lib $(EXEC).c
