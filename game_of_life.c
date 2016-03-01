@@ -42,12 +42,7 @@
 #define STRIP_HEIGHT 8
 #define STRIP_WIDTH 96
 
-/*
- * matrix located in appBackUpScreen
- * it would be more honest to cast appBackUpScreen to an array
- * but I couldn't figure out how to do that
- */
-__at 0x9872 unsigned char neighbor_matrix[STRIP_HEIGHT][STRIP_WIDTH];
+__at APP_BACKUP_SCREEN unsigned char neighbor_matrix[STRIP_HEIGHT][STRIP_WIDTH];
 
 /*
  * Fills neighbor matrix with the number of live neighbors of each pixel
@@ -187,7 +182,7 @@ void take_step()
     load_neighbor_matrix(top_row, true);
 
     FastCopy();
-    memset(appBackUpScreen, 0, BUFFER_SIZE);
+    memset(neighbor_matrix, 0, BUFFER_SIZE);
 }
 
 
@@ -235,7 +230,7 @@ int main()
 
     CEnable15MHz();
 
-    memset(appBackUpScreen, 0, BUFFER_SIZE);
+    memset(neighbor_matrix, 0, BUFFER_SIZE);
     FastCopy();
 
     while (state != DONE) {
