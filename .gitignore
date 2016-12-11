@@ -1,8 +1,6 @@
 *.rel
 *.swp
 *.asm
-!inc/ti83plus.asm
-!inc/fastcopy.asm
 *.lst
 *.sym
 *.lk
@@ -11,3 +9,4 @@
 *.8xp
 *.bin
 *.ihx
+*.zip
