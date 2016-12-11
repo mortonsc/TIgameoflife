@@ -27,7 +27,7 @@
  * the board, check the matrix for each pixel to see how many live neighbors
  * it has, and therefore what should happen to it.
  *
- * The TI84+ doesn't have enough RAM available for this matrix. So instead,
+ * There's no fixed location in the RAM of the TI-84+ for this matrix. So instead,
  * we divide the screen up into 9 horizontal strips, and generate the matrix
  * for each of them, one at a time, so we can reuse the same memory for each
  * matrix.
@@ -225,6 +225,7 @@ int main()
 {
     unsigned char sk;
     int pic_no;
+    uint8_t *pic;
 
     enum State state = PAUSED;
 
@@ -252,13 +253,13 @@ int main()
             } else if (sk == skStore) {
                 /* store screen to pic */
                 pic_no = get_pic_no();
-                if (pic_no != 0)
-                    memcpy(CCreatePic(pic_no), plotSScreen, PIC_SIZE_BYTES);
+                if (pic_no != 0 && (pic = CCreatePic(pic_no)))
+                    memcpy(pic, plotSScreen, PIC_SIZE_BYTES);
             } else if (sk == skLn) {
                 /* load a pic */
                 pic_no = get_pic_no();
-                if (pic_no != 0) {
-                    memcpy(plotSScreen, CRecallPic(pic_no), PIC_SIZE_BYTES);
+                if (pic_no != 0 && (pic = CRecallPic(pic_no))) {
+                    memcpy(plotSScreen, pic, PIC_SIZE_BYTES);
                     /* pic vars don't include the last row, so clear it */
                     memset(plotSScreen + 63*SCREEN_WIDTH_BYTES,
                             0, SCREEN_WIDTH_BYTES);
