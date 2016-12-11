@@ -1,7 +1,7 @@
 CC=sdcc
 CFLAGS=-mz80 --std-sdcc99 --reserve-regs-iy --max-allocs-per-node 30000
 LKFLAGS=--code-loc 0x9D9B --data-loc 0 --no-std-crt0
-EXEC=game_of_life
+EXEC=conway
 LDIR=lib
 
 # make all does not automatically recompile the library
