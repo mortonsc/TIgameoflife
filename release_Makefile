@@ -12,8 +12,9 @@ all: $(EXEC).8xp
 
 release: $(EXEC).zip
 
-$(EXEC).zip: $(EXEC).8xp $(EXEC).c $(LDIR)/c_ti83p.h $(LDIR)/c_ti83p.lib README.md
-	zip $(EXEC).zip $(EXEC).8xp $(EXEC).c $(LDIR)/c_ti83p.h $(LDIR)/c_ti83p.lib Makefile
+$(EXEC).zip: $(EXEC).8xp $(EXEC).c $(LDIR)/c_ti83p.h $(LDIR)/c_ti83p.lib README.md LICENSE.txt
+	zip $(EXEC).zip $(EXEC).8xp $(EXEC).c $(LDIR)/c_ti83p.h $(LDIR)/c_ti83p.lib \
+		Makefile README.md LICENSE.txt
 
 $(EXEC).8xp: $(EXEC).bin
 	binpac8x.py -O conway $(EXEC).bin

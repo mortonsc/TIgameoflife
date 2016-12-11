@@ -10,8 +10,10 @@ all: $(EXEC).8xp
 
 release: $(EXEC).zip
 
-$(EXEC).zip: $(EXEC).8xp $(EXEC).c $(LDIR)/c_ti83p.h lib README.md
-	zip $(EXEC).zip $(EXEC).8xp $(EXEC).c $(LDIR)/c_ti83p.h $(LDIR)/c_ti83p.lib release_Makefile
+$(EXEC).zip: $(EXEC).8xp $(EXEC).c $(LDIR)/c_ti83p.h lib README.md LICENSE.txt
+	zip $(EXEC).zip $(EXEC).8xp $(EXEC).c $(LDIR)/c_ti83p.h $(LDIR)/c_ti83p.lib \
+		release_Makefile README.md LICENSE.txt
+	# rename release_Makefile to Makefile in the zip archive
 	printf "@ release_Makefile\n@=Makefile" | zipnote -w $(EXEC).zip
 
 $(EXEC).8xp: $(EXEC).bin
