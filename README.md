@@ -23,16 +23,16 @@ To download and compile the source: open a terminal and navigate to the director
 Then enter the commands:
 
     git clone --recursive https://github.com/mortonsc/TIgameoflife.git
-    cd TIgameoflife
-    make
-That's it! The executable file is `game_of_life.8xp`.
+    cd TIgameoflife && make
+That's it! The executable file is `conway.8xp`.
 
 ### Windows
 All the required software is available for Windows, so it should be possible to compile, but I haven't tried.
 
 ## Installation
-Currently the only official way to obtain an executable is to follow the compilation process above.
-Once you've done that, open `game_of_life.8xp` with your favorite emulator, or, if you're particularly trusting,
+To install on your calculator, you must obtain an executable, either by compiling the source
+using the instructions above or by downloading the release from this repository.
+Once you've done that, open `conway.8xp` with your favorite emulator, or, if you're particularly trusting,
 upload it to your calculator with your favorite linking software.
 As far as I know the program is safe,
 but bear in mind that running assembly programs on the calculator is inherently dangerous.
